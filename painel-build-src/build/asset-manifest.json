@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/donaspainel/static/css/main.c5caa4a4.css",
+    "main.js": "/donaspainel/static/js/main.2b954b76.js",
+    "index.html": "/donaspainel/index.html",
+    "main.c5caa4a4.css.map": "/donaspainel/static/css/main.c5caa4a4.css.map",
+    "main.2b954b76.js.map": "/donaspainel/static/js/main.2b954b76.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.c5caa4a4.css",
+    "static/js/main.2b954b76.js"
+  ]
+}

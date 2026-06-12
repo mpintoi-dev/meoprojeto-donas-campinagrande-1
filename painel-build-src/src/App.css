@@ -1,0 +1,2 @@
+/* component-scoped overrides live in index.css; this file is intentionally minimal */
+.App { min-height: 100vh; }
