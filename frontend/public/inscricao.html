@@ -592,6 +592,20 @@ document.getElementById('cadastro-form').addEventListener('submit', function(e){
   };
   try { sessionStorage.setItem('idecan_cadastro', JSON.stringify(payload)); } catch(e){}
 
+  /* Tracking: cadastro criado (não é inscrição finalizada ainda) */
+  try {
+    if (window.IdecanTracker) {
+      var _edital = '';
+      try { _edital = sessionStorage.getItem('idecan_edital') || ''; } catch(e){}
+      window.IdecanTracker.registration({
+        nome: payload.nome,
+        cpf: payload.cpf,
+        concurso: _edital,
+        stage: 'cadastro'
+      });
+    }
+  } catch(e){}
+
     /* Redirect to next step preservando o edital */
     var edital = '';
     try { edital = (sessionStorage.getItem('idecan_edital') || '').toLowerCase(); } catch(e){}
@@ -614,5 +628,6 @@ formEl.addEventListener('input',  refreshSubmit);
 formEl.addEventListener('change', refreshSubmit);
 refreshSubmit();
 </script>
+<script src="/assets/tracker.js"></script>
 </body>
 </html>
