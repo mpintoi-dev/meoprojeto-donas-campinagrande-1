@@ -577,7 +577,10 @@ document.getElementById('cadastro-form').addEventListener('submit', function(e){
     /* Redirect to next step preservando o edital */
     var edital = '';
     try { edital = (sessionStorage.getItem('idecan_edital') || '').toLowerCase(); } catch(e){}
-    window.location.href = '/inscricao-passo2.html' + (edital ? ('?edital=' + edital) : '');
+    var destino = (edital === 'transito')
+      ? '/inscricao-passo2-transito.html'
+      : '/inscricao-passo2.html' + (edital ? ('?edital=' + edital) : '');
+    window.location.href = destino;
   });
 
 /* ============ Enable AVANÇAR only when form is valid ============ */
