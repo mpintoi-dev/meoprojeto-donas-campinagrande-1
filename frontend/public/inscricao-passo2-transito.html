@@ -565,6 +565,26 @@
     } catch(err){}
     window.location.href = '/meus-concursos.html';
   }
+
+  /* === Botão AVANÇAR só fica disponível com Aceito + Cargo selecionado === */
+  var aceitoEl = document.getElementById('CHK_AceitoRequerimento')
+              || document.querySelector('input[type=checkbox][name*="Aceito"]');
+  function refreshAvancarState(){
+    var temCargo = sel.value && sel.value !== '-1';
+    var temAceito = aceitoEl ? aceitoEl.checked : true;
+    var ok = temCargo && temAceito;
+    btn.disabled = !ok;
+    btn.style.opacity = ok ? '1' : '.5';
+    btn.style.cursor  = ok ? 'pointer' : 'not-allowed';
+    btn.style.filter  = ok ? 'none' : 'grayscale(.3)';
+    btn.title = ok ? 'Avançar' :
+      (!temCargo && !temAceito ? 'Selecione um cargo e marque "Aceito"' :
+       (!temCargo ? 'Selecione um cargo' : 'Marque "Aceito" para avançar'));
+  }
+  sel.addEventListener('change', refreshAvancarState);
+  if(aceitoEl) aceitoEl.addEventListener('change', refreshAvancarState);
+  refreshAvancarState();
+
   form.addEventListener('submit', function(e){ e.preventDefault(); e.stopImmediatePropagation(); handleAdvance(); }, true);
   btn.addEventListener('click',   function(e){ e.preventDefault(); e.stopImmediatePropagation(); handleAdvance(); }, true);
 })();
