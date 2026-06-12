@@ -232,7 +232,7 @@ footer{text-align:center;padding:20px 16px 28px;font-size:13px;color:#475569}
           <label for="tel1">Telefone 1</label>
           <input type="tel" id="tel1" name="tel1" required data-testid="input-tel1">
           <div class="choice" style="margin-top:6px">
-            <label><input type="radio" name="tel1-tipo" value="celular" required> Celular</label>
+            <label><input type="radio" name="tel1-tipo" value="celular" required checked> Celular</label>
             <label><input type="radio" name="tel1-tipo" value="fax" required> Fax</label>
             <label><input type="radio" name="tel1-tipo" value="fixo" required> Fixo</label>
           </div>
@@ -241,21 +241,14 @@ footer{text-align:center;padding:20px 16px 28px;font-size:13px;color:#475569}
           <label for="tel2">Telefone 2</label>
           <input type="tel" id="tel2" name="tel2" data-testid="input-tel2">
           <div class="choice" style="margin-top:6px">
-            <label><input type="radio" name="tel2-tipo" value="celular" required> Celular</label>
-            <label><input type="radio" name="tel2-tipo" value="fax" required> Fax</label>
-            <label><input type="radio" name="tel2-tipo" value="fixo" required> Fixo</label>
+            <label><input type="radio" name="tel2-tipo" value="celular" checked> Celular</label>
+            <label><input type="radio" name="tel2-tipo" value="fax"> Fax</label>
+            <label><input type="radio" name="tel2-tipo" value="fixo"> Fixo</label>
           </div>
         </div>
       </div>
       <div class="row">
-        <div class="field">
-          <label>Possui e-mail?</label>
-          <div class="choice">
-            <label><input type="radio" name="possui-email" value="sim" checked> Sim</label>
-            <label><input type="radio" name="possui-email" value="nao"> Não</label>
-          </div>
-        </div>
-        <div class="field" style="flex:2 1 300px">
+        <div class="field" style="flex:1 1 100%">
           <label for="email">E-mail</label>
           <input type="email" id="email" name="email" required placeholder="seu@email.com" data-testid="input-email">
         </div>
@@ -285,13 +278,13 @@ footer{text-align:center;padding:20px 16px 28px;font-size:13px;color:#475569}
         </div>
         <div class="field">
           <label for="rg-data">Data de Expedição (RG)</label>
-          <input type="date" id="rg-data" name="rg-data" required data-testid="input-rg-data">
+          <input type="date" id="rg-data" name="rg-data" data-testid="input-rg-data">
         </div>
       </div>
       <div class="row">
         <div class="field">
           <label for="rg-orgao">Órgão Expedidor</label>
-          <input type="text" id="rg-orgao" name="rg-orgao" required data-testid="input-rg-orgao">
+          <input type="text" id="rg-orgao" name="rg-orgao" data-testid="input-rg-orgao">
         </div>
         <div class="field" style="flex:0 1 140px">
           <label for="rg-uf">UF Emissor</label>
@@ -531,7 +524,7 @@ document.getElementById('cadastro-form').addEventListener('submit', function(e){
     document.getElementById('tel1').focus(); return;
   }
   var tel2Digits = onlyDigits(document.getElementById('tel2').value);
-  if(tel2Digits.length<10 || tel2Digits.length>11){
+  if(tel2Digits.length > 0 && (tel2Digits.length<10 || tel2Digits.length>11)){
     alert('Telefone 2 inválido. Use DDD + número (10 ou 11 dígitos).');
     document.getElementById('tel2').focus(); return;
   }
