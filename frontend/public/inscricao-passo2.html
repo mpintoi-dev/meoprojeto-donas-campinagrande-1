@@ -717,6 +717,25 @@
         '<option value="GM03100">CÓD 03100 - GUARDA CIVIL MUNICIPAL - 30H</option>';
     }
     window.__concursoLabel = 'EDITAL 03 - CAMPINA GRANDE GUARDA MUNICIPAL';
+  } else if(edital === 'transito'){
+    window.__cargosData = {
+      localidade: 'CAMPINA GRANDE/PB',
+      cargos: [{
+        codigo: 'COD 04300', titulo: 'AGENTE DE TRÂNSITO', jornada: '40H',
+        secretaria: 'SUPERINTENDÊNCIA DE TRÂNSITO E TRANSPORTES PÚBLICOS (STTP)',
+        remuneracao: 'R$ 3.170,83',
+        vagas: 40, vagasPCD: 8, vagasIndigenas: 1, vagasPPP: 0, cadastroReserva: 0,
+        taxa: 'R$ 150,00'
+      }]
+    };
+    var lbl2 = document.getElementById('LBL_DadosConcurso');
+    if(lbl2) lbl2.innerHTML = 'Concurso: EDITAL 04 - CAMPINA GRANDE AGENTE DE TRÂNSITO<br>Entidade: SUPERINTENDÊNCIA DE TRÂNSITO E TRANSPORTES PÚBLICOS – STTP / CAMPINA GRANDE – PB<br>Período de inscrições: 22/05/2026 a 22/06/2026';
+    var sel2 = document.getElementById('CMB_Cargo');
+    if(sel2){
+      sel2.innerHTML = '<option value="-1">--Selecione--</option>' +
+        '<option value="AT04300">CÓD 04300 - AGENTE DE TRÂNSITO - 40H</option>';
+    }
+    window.__concursoLabel = 'EDITAL 04 - CAMPINA GRANDE AGENTE DE TRÂNSITO';
   } else {
     window.__concursoLabel = 'EDITAL 01 - CAMPINA GRANDE GERAL';
   }
