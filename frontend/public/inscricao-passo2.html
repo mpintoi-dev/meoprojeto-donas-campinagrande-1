@@ -602,6 +602,22 @@
   sel.addEventListener('change', function(){
     var opt = sel.options[sel.selectedIndex];
     var text = opt ? opt.text : '';
+
+    /* Seleciona automaticamente o local da prova (CAMPINA GRANDE - única opção) */
+    var localProva = document.getElementById('CMB_LocalProva');
+    if(localProva){
+      if(opt && opt.value !== '-1'){
+        var camp = Array.from(localProva.options).find(function(o){
+          return /CAMPINA\s*GRANDE/i.test(o.text);
+        });
+        if(camp) localProva.value = camp.value;
+      } else {
+        /* Sem cargo: volta para --Selecione-- */
+        var noSel = Array.from(localProva.options).find(function(o){ return o.value==='-1' || /selecione/i.test(o.text); });
+        if(noSel) localProva.value = noSel.value;
+      }
+    }
+
     if(!opt || opt.value === '-1'){
       detalhe.classList.remove('visivel');
       detalhe.innerHTML = '';
