@@ -687,7 +687,7 @@
   if(!form || !btn || !sel) return;
 
   /* Acessibilidade: garante que o botão fique visível (substitui imagem por estilo limpo) */
-  btn.style.cssText = 'background:linear-gradient(180deg,#dc2626 0%,#991b1b 100%);color:#fff;border:none;padding:10px 28px;font-size:14px;font-weight:700;border-radius:8px;letter-spacing:.5px;cursor:pointer;box-shadow:0 4px 10px rgba(220,38,38,.25);height:42px;width:auto;text-shadow:none';
+  btn.style.cssText = 'background:linear-gradient(180deg,#dc2626 0%,#991b1b 100%);color:#fff;border:none;padding:0;font-size:13px;font-weight:700;border-radius:6px;letter-spacing:.4px;cursor:pointer;box-shadow:0 3px 6px rgba(220,38,38,.3);height:45px;width:97px;text-shadow:none';
 
   /* Botão VOLTAR (imagem ao lado) -> volta para a página de cadastro */
   var voltarLink = btn.closest('td').previousElementSibling && btn.closest('td').previousElementSibling.querySelector('a');
