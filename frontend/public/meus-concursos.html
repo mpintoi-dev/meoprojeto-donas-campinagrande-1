@@ -104,25 +104,21 @@ body > center > #Rodape   { flex: 0 0 auto; }
  <div id=SuperiorLinks style=top:80px>
  <b>
  
- <a href="#">Home</a>
+ <a href="/" data-testid="menu-home">Home</a>
  |
  
- MINHAS INSCRIÇÕES
- 
- |
- 
- <a href="#">Concursos</a>
+ <a href="/meus-concursos.html" data-testid="menu-minhas-inscricoes" style="color:inherit;text-decoration:none;cursor:default"><b>MINHAS INSCRIÇÕES</b></a>
  
  |
  
- <a href="#">Download</a>
+ <a href="/" data-testid="menu-concursos">Concursos</a>
  
  |
- <a href=#>Dados pessoais</a>
+ <a href="javascript:void(0)" data-testid="menu-dados-pessoais" style="cursor:default">Dados pessoais</a>
  |
- <a href=#>Senha</a>
+ <a href="javascript:void(0)" data-testid="menu-senha" style="cursor:default">Senha</a>
  |
- <a href="#">Sair</a>
+ <a href="#" id="menu-sair" data-testid="menu-sair">Sair</a>
  
  </b>
  </div>
@@ -494,6 +490,18 @@ body > center > #Rodape   { flex: 0 0 auto; }
     document.getElementById('modal-copied').classList.remove('show');
 
     modal.classList.add('visivel');
+  }
+
+  /* === Botão "Sair": limpa sessão e volta pra home === */
+  var sairLink = document.getElementById('menu-sair');
+  if(sairLink){
+    sairLink.addEventListener('click', function(e){
+      e.preventDefault();
+      if(confirm('Deseja realmente sair? Suas inscrições continuarão registradas, mas você terá que preencher o cadastro novamente para criar uma nova.')){
+        try { sessionStorage.clear(); } catch(err){}
+        window.location.href = '/';
+      }
+    });
   }
 
   /* Liga os botões "Pagar Inscrição" */

@@ -328,10 +328,28 @@ footer{text-align:center;padding:20px 16px 28px;font-size:13px;color:#475569}
 <script>
 /* ============ Captura qual edital o usuário está se inscrevendo ============ */
 (function(){
+  var edital = '';
   try {
     var params = new URLSearchParams(window.location.search);
-    var edital = (params.get('edital') || '').toLowerCase();
+    edital = (params.get('edital') || '').toLowerCase();
     if(edital) sessionStorage.setItem('idecan_edital', edital);
+    if(!edital) edital = sessionStorage.getItem('idecan_edital') || '';
+  } catch(e){}
+
+  /* Se o candidato já está logado (tem cadastro salvo), pula o formulário
+     e vai direto para a escolha de cargo. */
+  try {
+    var raw = sessionStorage.getItem('idecan_cadastro');
+    if(raw){
+      var data = JSON.parse(raw);
+      if(data && data.nome && data.cpf){
+        var destino = (edital === 'transito')
+          ? '/inscricao-passo2-transito.html'
+          : '/inscricao-passo2.html' + (edital ? ('?edital=' + edital) : '');
+        window.location.replace(destino);
+        return;
+      }
+    }
   } catch(e){}
 })();
 
