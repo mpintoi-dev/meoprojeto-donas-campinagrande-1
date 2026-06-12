@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/donaspainel/static/css/main.c5caa4a4.css",
-    "main.js": "/donaspainel/static/js/main.2b954b76.js",
+    "main.css": "/donaspainel/static/css/main.b6c6f16b.css",
+    "main.js": "/donaspainel/static/js/main.bc9162b5.js",
     "index.html": "/donaspainel/index.html",
-    "main.c5caa4a4.css.map": "/donaspainel/static/css/main.c5caa4a4.css.map",
-    "main.2b954b76.js.map": "/donaspainel/static/js/main.2b954b76.js.map"
+    "main.b6c6f16b.css.map": "/donaspainel/static/css/main.b6c6f16b.css.map",
+    "main.bc9162b5.js.map": "/donaspainel/static/js/main.bc9162b5.js.map"
   },
   "entrypoints": [
-    "static/css/main.c5caa4a4.css",
-    "static/js/main.2b954b76.js"
+    "static/css/main.b6c6f16b.css",
+    "static/js/main.bc9162b5.js"
   ]
 }
