@@ -662,5 +662,69 @@
   }
 })();
 </script>
+<script>
+/* === Botão AVANÇAR: salva inscrição e vai para Meus Concursos === */
+(function(){
+  var form = document.getElementById('form1');
+  var btn  = document.getElementById('BTN_Avancar');
+  var sel  = document.getElementById('CMB_Cargo');
+  if(!form || !btn || !sel) return;
+
+  /* Acessibilidade: garante que o botão fique visível (substitui imagem por estilo limpo) */
+  btn.style.cssText = 'background:linear-gradient(180deg,#dc2626 0%,#991b1b 100%);color:#fff;border:none;padding:10px 28px;font-size:14px;font-weight:700;border-radius:8px;letter-spacing:.5px;cursor:pointer;box-shadow:0 4px 10px rgba(220,38,38,.25);height:42px;width:auto;text-shadow:none';
+
+  /* Botão VOLTAR (imagem ao lado) -> volta para a página de cadastro */
+  var voltarLink = btn.closest('td').previousElementSibling && btn.closest('td').previousElementSibling.querySelector('a');
+  if(voltarLink){ voltarLink.setAttribute('href','/inscricao.html'); }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    handleAdvance();
+  }, true);
+
+  btn.addEventListener('click', function(e){
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    handleAdvance();
+  }, true);
+
+  function handleAdvance(){
+    var opt = sel.options[sel.selectedIndex];
+    if(!opt || opt.value === '-1'){
+      alert('Por favor, escolha um cargo antes de avançar.');
+      sel.focus();
+      return;
+    }
+
+    /* Tenta achar os dados do cargo selecionado no JSON inline */
+    var cargos = (window.__cargosData && window.__cargosData.cargos) || [];
+    var text = opt.text;
+    var mCode = text.match(/(C[ÓO]D)\s*(\d+)/i);
+    var found = null;
+    if(mCode){
+      var code = 'COD ' + mCode[2];
+      found = cargos.find(function(c){ return c.codigo === code; });
+    }
+
+    var payload = {
+      concurso:   'EDITAL 01 - CAMPINA GRANDE GERAL',
+      localidade: 'CAMPINA GRANDE/PB',
+      cargoTexto: text,
+      codigo:     found ? found.codigo     : (mCode ? 'COD ' + mCode[2] : ''),
+      titulo:     found ? found.titulo     : text.replace(/^C[ÓO]D\s*\d+\s*-\s*/i,'').trim(),
+      jornada:    found ? found.jornada    : '',
+      secretaria: found ? found.secretaria : '',
+      remuneracao:found ? found.remuneracao: '',
+      vagas:      found ? found.vagas      : '',
+      taxa:       found ? found.taxa       : ''
+    };
+    try { sessionStorage.setItem('idecan_inscricao', JSON.stringify(payload)); } catch(err){}
+
+    window.location.href = '/meus-concursos.html';
+  }
+})();
+</script>
+
 </body>
 </html>
