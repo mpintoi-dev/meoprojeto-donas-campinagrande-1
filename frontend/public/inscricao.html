@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cadastro - IDECAN</title>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#f3f5f8;color:#1f2937;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.45}
+header{background:linear-gradient(90deg,#0b3870 0%,#0a2c5c 100%);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.logo{font-weight:800;font-size:20px;letter-spacing:.5px}
+.back{background:#fff;color:#0b3870;text-decoration:none;padding:7px 14px;border-radius:30px;font-size:14px;font-weight:600;transition:background .2s}
+.back:hover{background:#e5edf7}
+.container{max-width:760px;margin:24px auto;padding:0 16px}
+h1{font-size:22px;margin:0 0 18px;color:#0b3870;font-weight:700}
+.intro{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;font-size:14.5px;margin-bottom:18px}
+form{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 18px 22px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+fieldset{border:1px solid #d8dde7;border-radius:10px;padding:14px 16px 16px;margin:0 0 18px}
+legend{padding:0 8px;font-weight:700;color:#0b3870;font-size:15px}
+.row{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
+.row > .field{flex:1 1 220px;min-width:0}
+label{display:block;font-size:13.5px;margin-bottom:5px;color:#1f2937;font-weight:500}
+input[type=text],input[type=email],input[type=tel],input[type=password],input[type=date],select,textarea{
+  width:100%;padding:9px 11px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;background:#fff;color:#1f2937;font-family:inherit;
+  transition:border-color .15s, box-shadow .15s
+}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#1d4ed8;box-shadow:0 0 0 3px rgba(29,78,216,.15)}
+.choice{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;align-items:center}
+.choice label{display:inline-flex;align-items:center;gap:6px;font-weight:400;margin:0;cursor:pointer}
+.choice input{accent-color:#0b3870}
+.hint{font-size:12.5px;color:#64748b;margin-top:4px}
+.warning{background:#fff7ed;border:1px solid #fed7aa;color:#7c2d12;border-radius:8px;padding:10px 12px;font-size:13.5px;margin:14px 0}
+.actions{display:flex;justify-content:center;margin-top:10px}
+.btn-submit{background:linear-gradient(180deg,#dc2626 0%,#991b1b 100%);color:#fff;border:none;padding:13px 38px;font-size:15px;font-weight:700;border-radius:10px;letter-spacing:.5px;cursor:pointer;box-shadow:0 4px 10px rgba(220,38,38,.25);transition:transform .12s, box-shadow .12s}
+.btn-submit:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(220,38,38,.35)}
+.btn-submit:active{transform:translateY(0)}
+footer{text-align:center;padding:20px 16px 28px;font-size:13px;color:#475569}
+.success{display:none;background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:14px}
+.success.visible{display:block}
+@media (max-width:560px){
+  header{padding:12px 14px}
+  .logo{font-size:17px}
+  .container{padding:0 10px;margin:16px auto}
+  h1{font-size:19px}
+  form{padding:14px}
+  fieldset{padding:12px}
+  .btn-submit{width:100%;padding:14px}
+}
+</style>
+</head>
+<body>
+<header>
+  <a href="/" style="color:#fff;text-decoration:none" data-testid="header-logo"><span class="logo">IDECAN</span></a>
+  <a href="/" class="back" data-testid="back-home-btn">← Voltar para a Home</a>
+</header>
+<main class="container">
+  <h1>Cadastro / Inscrição On-line</h1>
+  <div class="intro">
+    Para iniciar sua inscrição preencha os dados abaixo. Os campos marcados como (Obrigatório) são necessários.
+    Em caso de dúvidas, entre em contato pelo telefone <strong>(61) 3201-6225</strong> ou e-mail <strong>atendimento@idecan.org.br</strong>.
+  </div>
+  <div class="success" id="success-msg" data-testid="success-msg">
+    ✓ Cadastro enviado com sucesso! Em breve você receberá um e-mail com os próximos passos.
+  </div>
+
+  <form id="cadastro-form" data-testid="cadastro-form" novalidate>
+
+    <fieldset>
+      <legend>Envio de foto (Obrigatório)</legend>
+      <div class="row">
+        <div class="field" style="flex:2 1 320px">
+          <label for="foto-descricao">Descrição (Opcional)</label>
+          <input type="text" id="foto-descricao" name="foto-descricao" data-testid="input-foto-descricao">
+        </div>
+        <div class="field">
+          <label for="foto-arquivo">Arquivo</label>
+          <input type="file" id="foto-arquivo" name="foto-arquivo" accept="image/*" data-testid="input-foto-arquivo">
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Dados Pessoais</legend>
+      <div class="row">
+        <div class="field">
+          <label for="nome">Nome</label>
+          <input type="text" id="nome" name="nome" required placeholder="Completo, sem abreviação" data-testid="input-nome">
+        </div>
+        <div class="field">
+          <label for="nome-social">Nome Social</label>
+          <input type="text" id="nome-social" name="nome-social" placeholder="Nome Social (opcional)" data-testid="input-nome-social">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Sexo</label>
+          <div class="choice">
+            <label><input type="radio" name="sexo" value="M" data-testid="radio-sexo-m"> Masculino</label>
+            <label><input type="radio" name="sexo" value="F" data-testid="radio-sexo-f"> Feminino</label>
+          </div>
+        </div>
+        <div class="field">
+          <label for="nascimento">Nascimento</label>
+          <input type="date" id="nascimento" name="nascimento" data-testid="input-nascimento">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="nacionalidade">Nacionalidade</label>
+          <select id="nacionalidade" name="nacionalidade" data-testid="select-nacionalidade">
+            <option value="">--Selecione--</option>
+            <option>Brasileira</option>
+            <option>Estrangeira</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="escolaridade">Escolaridade</label>
+          <select id="escolaridade" name="escolaridade" data-testid="select-escolaridade">
+            <option value="">--Selecione--</option>
+            <option>Fundamental</option>
+            <option>Médio</option>
+            <option>Técnico</option>
+            <option>Superior</option>
+            <option>Pós-graduação</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="estado-civil">Estado Civil</label>
+          <select id="estado-civil" name="estado-civil" data-testid="select-estado-civil">
+            <option value="">--Selecione--</option>
+            <option>Solteiro(a)</option>
+            <option>Casado(a)</option>
+            <option>Divorciado(a)</option>
+            <option>Viúvo(a)</option>
+            <option>União estável</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:1 1 100%">
+          <label for="nome-mae">Nome da Mãe</label>
+          <input type="text" id="nome-mae" name="nome-mae" placeholder="Completo, sem abreviação" data-testid="input-nome-mae">
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Endereço para correspondência</legend>
+      <div class="row">
+        <div class="field" style="flex:0 1 180px">
+          <label for="cep">CEP</label>
+          <input type="text" id="cep" name="cep" placeholder="99999-999" data-testid="input-cep">
+        </div>
+        <div class="field" style="flex:3 1 300px">
+          <label for="endereco">Endereço</label>
+          <input type="text" id="endereco" name="endereco" data-testid="input-endereco">
+        </div>
+        <div class="field" style="flex:0 1 120px">
+          <label for="numero">Número</label>
+          <input type="text" id="numero" name="numero" data-testid="input-numero">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="complemento">Complemento</label>
+          <input type="text" id="complemento" name="complemento" data-testid="input-complemento">
+        </div>
+        <div class="field">
+          <label for="bairro">Bairro</label>
+          <input type="text" id="bairro" name="bairro" data-testid="input-bairro">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="cidade">Cidade</label>
+          <input type="text" id="cidade" name="cidade" data-testid="input-cidade">
+        </div>
+        <div class="field" style="flex:0 1 140px">
+          <label for="uf">UF</label>
+          <select id="uf" name="uf" data-testid="select-uf">
+            <option value="">--</option>
+            <option>AC</option><option>AL</option><option>AP</option><option>AM</option>
+            <option>BA</option><option>CE</option><option>DF</option><option>ES</option>
+            <option>GO</option><option>MA</option><option>MT</option><option>MS</option>
+            <option>MG</option><option>PA</option><option>PB</option><option>PR</option>
+            <option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
+            <option>RS</option><option>RO</option><option>RR</option><option>SC</option>
+            <option>SP</option><option>SE</option><option>TO</option>
+          </select>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Contatos</legend>
+      <div class="row">
+        <div class="field">
+          <label for="tel1">Telefone 1</label>
+          <input type="tel" id="tel1" name="tel1" data-testid="input-tel1">
+          <div class="choice" style="margin-top:6px">
+            <label><input type="radio" name="tel1-tipo" value="celular"> Celular</label>
+            <label><input type="radio" name="tel1-tipo" value="fax"> Fax</label>
+            <label><input type="radio" name="tel1-tipo" value="fixo"> Fixo</label>
+          </div>
+        </div>
+        <div class="field">
+          <label for="tel2">Telefone 2</label>
+          <input type="tel" id="tel2" name="tel2" data-testid="input-tel2">
+          <div class="choice" style="margin-top:6px">
+            <label><input type="radio" name="tel2-tipo" value="celular"> Celular</label>
+            <label><input type="radio" name="tel2-tipo" value="fax"> Fax</label>
+            <label><input type="radio" name="tel2-tipo" value="fixo"> Fixo</label>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Possui e-mail?</label>
+          <div class="choice">
+            <label><input type="radio" name="possui-email" value="sim" checked> Sim</label>
+            <label><input type="radio" name="possui-email" value="nao"> Não</label>
+          </div>
+        </div>
+        <div class="field" style="flex:2 1 300px">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" name="email" placeholder="seu@email.com" data-testid="input-email">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:1 1 100%">
+          <label class="choice"><input type="checkbox" name="receber-news" checked data-testid="check-news"> Desejo receber o informativo eletrônico com novos concursos, projetos e novidades.</label>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Pessoa com Deficiência (PcD)</legend>
+      <div class="choice">
+        <label><input type="radio" name="pcd" value="sim" data-testid="radio-pcd-sim"> Sim</label>
+        <label><input type="radio" name="pcd" value="nao" checked data-testid="radio-pcd-nao"> Não</label>
+      </div>
+      <div class="hint">Se sim, enviar Laudo Médico, conforme Edital e eventuais aditivos do concurso desejado.</div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Documentação</legend>
+      <div class="row">
+        <div class="field">
+          <label for="rg">RG</label>
+          <input type="text" id="rg" name="rg" data-testid="input-rg">
+        </div>
+        <div class="field">
+          <label for="rg-data">Data de Expedição (RG)</label>
+          <input type="date" id="rg-data" name="rg-data" data-testid="input-rg-data">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="rg-orgao">Órgão Expedidor</label>
+          <input type="text" id="rg-orgao" name="rg-orgao" data-testid="input-rg-orgao">
+        </div>
+        <div class="field" style="flex:0 1 140px">
+          <label for="rg-uf">UF Emissor</label>
+          <input type="text" id="rg-uf" name="rg-uf" maxlength="2" data-testid="input-rg-uf">
+        </div>
+        <div class="field">
+          <label for="cpf">CPF</label>
+          <input type="text" id="cpf" name="cpf" placeholder="999.999.999-99" data-testid="input-cpf">
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Acesso</legend>
+      <div class="row">
+        <div class="field">
+          <label for="senha">Senha</label>
+          <input type="password" id="senha" name="senha" minlength="4" maxlength="8" data-testid="input-senha">
+          <div class="hint">De 4 a 8 caracteres. Informe letras e números.</div>
+        </div>
+        <div class="field">
+          <label for="senha2">Confirme a senha</label>
+          <input type="password" id="senha2" name="senha2" minlength="4" maxlength="8" data-testid="input-senha2">
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="warning">
+      <strong>ATENÇÃO:</strong> Não nos responsabilizamos pelos possíveis transtornos causados pelo mau preenchimento de qualquer um dos campos acima.
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btn-submit" data-testid="btn-submit">AVANÇAR</button>
+    </div>
+  </form>
+</main>
+<footer>
+  © 2026 IDECAN — Instituto de Desenvolvimento Educacional, Cultural e Assistencial Nacional. Todos os Direitos Reservados.
+</footer>
+<script>
+document.getElementById('cadastro-form').addEventListener('submit', function(e){
+  e.preventDefault();
+  var nome = document.getElementById('nome').value.trim();
+  if(!nome){
+    alert('Por favor, informe seu nome completo.');
+    document.getElementById('nome').focus();
+    return;
+  }
+  var senha = document.getElementById('senha').value;
+  var senha2 = document.getElementById('senha2').value;
+  if(senha && senha !== senha2){
+    alert('As senhas não coincidem.');
+    document.getElementById('senha2').focus();
+    return;
+  }
+  var success = document.getElementById('success-msg');
+  success.classList.add('visible');
+  window.scrollTo({top:0, behavior:'smooth'});
+  this.reset();
+});
+</script>
+</body>
+</html>
