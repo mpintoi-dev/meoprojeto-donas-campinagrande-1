@@ -332,6 +332,15 @@ footer{text-align:center;padding:20px 16px 28px;font-size:13px;color:#475569}
   © 2026 IDECAN — Instituto de Desenvolvimento Educacional, Cultural e Assistencial Nacional. Todos os Direitos Reservados.
 </footer>
 <script>
+/* ============ Captura qual edital o usuário está se inscrevendo ============ */
+(function(){
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var edital = (params.get('edital') || '').toLowerCase();
+    if(edital) sessionStorage.setItem('idecan_edital', edital);
+  } catch(e){}
+})();
+
 /* ============ Helpers ============ */
 function onlyDigits(v){ return (v||'').replace(/\D+/g,''); }
 

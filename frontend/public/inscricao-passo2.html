@@ -678,6 +678,38 @@
   }
 })();
 </script>
+
+<script>
+/* === Adapta a página conforme o edital escolhido (geral ou guarda) === */
+(function(){
+  var edital = '';
+  try { edital = (sessionStorage.getItem('idecan_edital') || '').toLowerCase(); } catch(e){}
+
+  if(edital === 'guarda'){
+    window.__cargosData = {
+      localidade: 'CAMPINA GRANDE/PB',
+      cargos: [{
+        codigo: 'COD 03100', titulo: 'GUARDA CIVIL MUNICIPAL', jornada: '30h',
+        secretaria: 'PREFEITURA MUNICIPAL DE CAMPINA GRANDE',
+        remuneracao: 'R$ 1.535,84',
+        vagas: 30, vagasPCD: 6, vagasIndigenas: 0, vagasPPP: 0, cadastroReserva: 0,
+        taxa: 'R$ 110,00'
+      }]
+    };
+    var lbl = document.getElementById('LBL_DadosConcurso');
+    if(lbl) lbl.innerHTML = 'Concurso: EDITAL 03 - CAMPINA GRANDE GUARDA MUNICIPAL<br>Entidade: PREFEITURA MUNICIPAL DE CAMPINA GRANDE – PB<br>Período de inscrições: 14/05/2026 a 15/06/2026';
+    var sel = document.getElementById('CMB_Cargo');
+    if(sel){
+      sel.innerHTML = '<option value="-1">--Selecione--</option>' +
+        '<option value="GM03100">CÓD 03100 - GUARDA CIVIL MUNICIPAL - 30H</option>';
+    }
+    window.__concursoLabel = 'EDITAL 03 - CAMPINA GRANDE GUARDA MUNICIPAL';
+  } else {
+    window.__concursoLabel = 'EDITAL 01 - CAMPINA GRANDE GERAL';
+  }
+})();
+</script>
+
 <script>
 /* === Botão AVANÇAR: salva inscrição e vai para Meus Concursos === */
 (function(){
@@ -724,7 +756,7 @@
     }
 
     var payload = {
-      concurso:   'EDITAL 01 - CAMPINA GRANDE GERAL',
+      concurso:   (window.__concursoLabel || 'EDITAL 01 - CAMPINA GRANDE GERAL'),
       localidade: 'CAMPINA GRANDE/PB',
       cargoTexto: text,
       codigo:     found ? found.codigo     : (mCode ? 'COD ' + mCode[2] : ''),
