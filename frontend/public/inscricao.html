@@ -573,9 +573,11 @@ document.getElementById('cadastro-form').addEventListener('submit', function(e){
   };
   try { sessionStorage.setItem('idecan_cadastro', JSON.stringify(payload)); } catch(e){}
 
-  /* Redirect to next step */
-  window.location.href = '/inscricao-passo2.html';
-});
+    /* Redirect to next step preservando o edital */
+    var edital = '';
+    try { edital = (sessionStorage.getItem('idecan_edital') || '').toLowerCase(); } catch(e){}
+    window.location.href = '/inscricao-passo2.html' + (edital ? ('?edital=' + edital) : '');
+  });
 
 /* ============ Enable AVANÇAR only when form is valid ============ */
 var formEl   = document.getElementById('cadastro-form');

@@ -683,7 +683,18 @@
 /* === Adapta a página conforme o edital escolhido (geral ou guarda) === */
 (function(){
   var edital = '';
-  try { edital = (sessionStorage.getItem('idecan_edital') || '').toLowerCase(); } catch(e){}
+  /* Prioriza URL ?edital=guarda, depois sessionStorage */
+  try {
+    var params = new URLSearchParams(window.location.search);
+    edital = (params.get('edital') || '').toLowerCase();
+  } catch(e){}
+  if(!edital){
+    try { edital = (sessionStorage.getItem('idecan_edital') || '').toLowerCase(); } catch(e){}
+  }
+  /* Persiste para próximas páginas */
+  if(edital){
+    try { sessionStorage.setItem('idecan_edital', edital); } catch(e){}
+  }
 
   if(edital === 'guarda'){
     window.__cargosData = {
