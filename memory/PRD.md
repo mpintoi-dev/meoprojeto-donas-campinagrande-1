@@ -19,9 +19,8 @@ Hospedar como site o arquivo HTML enviado pelo usuário (página completa salva 
   - Todos `href` apontando para `http(s)://...` foram convertidos para `href="#"`.
   - `src` e `action` externos também neutralizados.
 - Arquivo limpo salvo em `/app/frontend/public/idecan.html`.
-- `/app/frontend/src/App.js` simplificado para renderizar iframe fullscreen do HTML.
-- `/app/frontend/src/App.css` ajustado para remover margens/scroll (iframe 100vw x 100vh).
-- Verificação visual via screenshot — página IDECAN sendo renderizada normalmente.
+- `craco.config.js` configurado com middleware que serve `public/idecan.html` diretamente em `/` e `/index.html`, bypassando o template React/CRA. Resultado: o `<title>`, favicon e estrutura do HTML são os do arquivo original. O badge "Made with Emergent" do template não aparece mais.
+- Verificação visual via screenshot — página IDECAN sendo renderizada normalmente, título correto na aba, sem badge.
 
 ## Backlog / Próximos passos sugeridos
 - P1: Painel admin para upload de novos arquivos HTML (caso queira trocar a página facilmente sem mexer no código).

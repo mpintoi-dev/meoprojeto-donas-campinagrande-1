@@ -61,23 +61,17 @@ let webpackConfig = {
 };
 
 webpackConfig.devServer = (devServerConfig) => {
-  // Add health check endpoints if enabled
+  // Setup health endpoints if enabled
   if (config.enableHealthCheck && setupHealthEndpoints && healthPluginInstance) {
     const originalSetupMiddlewares = devServerConfig.setupMiddlewares;
-
     devServerConfig.setupMiddlewares = (middlewares, devServer) => {
-      // Call original setup if exists
       if (originalSetupMiddlewares) {
         middlewares = originalSetupMiddlewares(middlewares, devServer);
       }
-
-      // Setup health endpoints
       setupHealthEndpoints(devServer, healthPluginInstance);
-
       return middlewares;
     };
   }
-
   return devServerConfig;
 };
 
@@ -95,6 +89,39 @@ if (isDevServer) {
       throw err;
     }
   }
+}
+
+// Serve the user's static HTML as the site root, AFTER all other wrappers
+// (visual-edits otherwise overrides setupMiddlewares and removes our handler).
+{
+  const previousDevServer = webpackConfig.devServer;
+  webpackConfig.devServer = (devServerConfig) => {
+    if (typeof previousDevServer === "function") {
+      devServerConfig = previousDevServer(devServerConfig);
+    }
+    const previousSetupMiddlewares = devServerConfig.setupMiddlewares;
+    devServerConfig.setupMiddlewares = (middlewares, devServer) => {
+      if (previousSetupMiddlewares) {
+        middlewares = previousSetupMiddlewares(middlewares, devServer);
+      }
+      const userHtmlPath = path.resolve(__dirname, "public/idecan.html");
+      middlewares.unshift({
+        name: "serve-user-html",
+        middleware: (req, res, next) => {
+          if (
+            req.method === "GET" &&
+            (req.path === "/" || req.path === "/index.html")
+          ) {
+            res.sendFile(userHtmlPath);
+            return;
+          }
+          next();
+        },
+      });
+      return middlewares;
+    };
+    return devServerConfig;
+  };
 }
 
 module.exports = webpackConfig;
