@@ -735,7 +735,17 @@
       vagas:      found ? found.vagas      : '',
       taxa:       found ? found.taxa       : ''
     };
-    try { sessionStorage.setItem('idecan_inscricao', JSON.stringify(payload)); } catch(err){}
+    try {
+      var arr = JSON.parse(sessionStorage.getItem('idecan_inscricoes') || '[]');
+      if(!Array.isArray(arr)) arr = [];
+      payload.id = 'INS' + Date.now();
+      payload.protocolo = 'IDC' + (Date.now().toString().slice(-8));
+      payload.dataInscricao = new Date().toISOString();
+      payload.status = 'AGUARDANDO PAGAMENTO';
+      arr.push(payload);
+      sessionStorage.setItem('idecan_inscricoes', JSON.stringify(arr));
+      sessionStorage.setItem('idecan_inscricao', JSON.stringify(payload)); /* compat */
+    } catch(err){}
 
     window.location.href = '/meus-concursos.html';
   }

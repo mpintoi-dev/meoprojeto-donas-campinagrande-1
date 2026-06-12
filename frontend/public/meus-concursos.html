@@ -226,46 +226,241 @@ body > center > #Rodape   { flex: 0 0 auto; }
   var ultimo = document.getElementById('cand-ultimo-acesso');
   if(ultimo) ultimo.textContent = dataHoje + ' ' + horaAgora;
 
-  /* Lê dados do cadastro */
+  /* Dados do candidato */
   var data = {};
   try { data = JSON.parse(sessionStorage.getItem('idecan_cadastro') || '{}') || {}; } catch(e){}
-
   var nomeEl = document.getElementById('cand-nome');
   if(nomeEl && data.nome) nomeEl.textContent = data.nome;
   var cpfEl = document.getElementById('cand-cpf');
   if(cpfEl && data.cpf) cpfEl.textContent = 'CPF: ' + data.cpf;
 
-  /* Lê inscrição realizada (cargo escolhido na página passo2) */
-  var inscricao = {};
-  try { inscricao = JSON.parse(sessionStorage.getItem('idecan_inscricao') || '{}') || {}; } catch(e){}
+  /* Lê todas as inscrições */
+  var inscricoes = [];
+  try { inscricoes = JSON.parse(sessionStorage.getItem('idecan_inscricoes') || '[]'); } catch(e){}
+  if(!Array.isArray(inscricoes)) inscricoes = [];
+
+  /* Fallback: inscrição única antiga */
+  if(inscricoes.length === 0){
+    try {
+      var legacy = JSON.parse(sessionStorage.getItem('idecan_inscricao') || '{}');
+      if(legacy && legacy.concurso){
+        legacy.id = legacy.id || ('INS' + Date.now());
+        legacy.protocolo = legacy.protocolo || ('IDC' + (Date.now().toString().slice(-8)));
+        legacy.dataInscricao = legacy.dataInscricao || new Date().toISOString();
+        legacy.status = legacy.status || 'AGUARDANDO PAGAMENTO';
+        inscricoes.push(legacy);
+      }
+    } catch(e){}
+  }
 
   var bloco = document.getElementById('bloco-minhas-inscricoes');
   var tbody = document.querySelector('#tabela-minhas-inscricoes tbody');
-  if(bloco && tbody && inscricao && inscricao.concurso){
-    var protocolo = 'IDC' + (Date.now().toString().slice(-8));
-    var dataInscricao = dataHoje + ' ' + horaAgora;
-    var cargoLabel = (inscricao.codigo ? inscricao.codigo + ' - ' : '') + (inscricao.titulo || '') + (inscricao.jornada ? ' - ' + inscricao.jornada : '');
-    var html =
-      '<tr>' +
-        '<td width="60" height="60">' +
-          '<img src="/assets/2ec2fab246f275bb.jpg" width="60" height="60" alt="' + escape(inscricao.concurso) + '" class="bordaImagem1">' +
+  if(!bloco || !tbody || inscricoes.length === 0) return;
+
+  function fmtData(iso){
+    try {
+      var d = new Date(iso);
+      return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear()+' '+pad(d.getHours())+':'+pad(d.getMinutes());
+    } catch(e){ return iso || ''; }
+  }
+
+  var rows = '';
+  inscricoes.forEach(function(ins, idx){
+    var cargoLabel = (ins.codigo ? ins.codigo + ' - ' : '') + (ins.titulo || '') + (ins.jornada ? ' - ' + ins.jornada : '');
+    var pago = ins.status === 'PAGO';
+    var badge = pago
+      ? '<span style="background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:14px;padding:5px 12px;font-size:11px;font-weight:bold;display:inline-block">PAGO ✓</span>'
+      : '<span style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:14px;padding:5px 12px;font-size:11px;font-weight:bold;display:inline-block">AGUARDANDO PAGAMENTO</span>';
+    var actionBtn = pago
+      ? '<button type="button" class="btn-pagar-inscricao" disabled data-idx="'+idx+'" style="margin-top:10px;background:#9ca3af;color:#fff;border:none;padding:7px 14px;font-size:12px;font-weight:700;border-radius:6px;cursor:not-allowed;opacity:.7">Pagamento Confirmado</button>'
+      : '<button type="button" class="btn-pagar-inscricao" data-idx="'+idx+'" data-testid="btn-pagar-'+idx+'" style="margin-top:10px;background:linear-gradient(180deg,#16a34a 0%,#15803d 100%);color:#fff;border:none;padding:8px 18px;font-size:13px;font-weight:700;border-radius:6px;cursor:pointer;box-shadow:0 3px 6px rgba(22,163,74,.3);letter-spacing:.3px">💳 Pagar Inscrição</button>';
+
+    rows +=
+      '<tr style="border-bottom:1px solid #e5e7eb">' +
+        '<td width="60" style="vertical-align:top;padding:14px 8px">' +
+          '<img src="/assets/2ec2fab246f275bb.jpg" width="60" height="60" alt="" class="bordaImagem1">' +
         '</td>' +
-        '<td>' +
-          '<a href="#" style="font-weight:bold">' + escape(inscricao.concurso) + '</a>' +
+        '<td style="padding:14px 8px;vertical-align:top">' +
+          '<a href="#" style="font-weight:bold">' + escape(ins.concurso) + '</a>' +
           '<br><span class="txt2">Cargo: <b>' + escape(cargoLabel) + '</b></span>' +
-          '<br><span class="txt2">Localidade: ' + escape(inscricao.localidade || 'CAMPINA GRANDE/PB') + '</span>' +
-          '<br><span class="txt2">Inscrição realizada em: ' + escape(dataInscricao) + ' &nbsp;|&nbsp; Protocolo: <b>' + escape(protocolo) + '</b></span>' +
+          '<br><span class="txt2">Localidade: ' + escape(ins.localidade || 'CAMPINA GRANDE/PB') + '</span>' +
+          '<br><span class="txt2">Inscrição realizada em: ' + escape(fmtData(ins.dataInscricao)) + ' &nbsp;|&nbsp; Protocolo: <b>' + escape(ins.protocolo) + '</b></span>' +
         '</td>' +
-        '<td align="right" style="vertical-align:middle">' +
-          '<span style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:14px;padding:5px 12px;font-size:11px;font-weight:bold;display:inline-block">' +
-            'AGUARDANDO PAGAMENTO' +
-          '</span>' +
-          '<br><span class="txt2" style="display:inline-block;margin-top:6px"><b>Taxa: ' + escape(inscricao.taxa || '') + '</b></span>' +
+        '<td align="right" style="vertical-align:middle;padding:14px 8px">' +
+          badge +
+          '<br><span class="txt2" style="display:inline-block;margin-top:6px"><b>Taxa: ' + escape(ins.taxa || '') + '</b></span>' +
+          '<br>' + actionBtn +
         '</td>' +
       '</tr>';
-    tbody.innerHTML = html;
-    bloco.style.display = 'block';
+  });
+  tbody.innerHTML = rows;
+  bloco.style.display = 'block';
+
+  /* ====================== Modal de Pagamento PIX ====================== */
+  function buildModal(){
+    if(document.getElementById('modal-pagamento')) return;
+    var css =
+      '#modal-pagamento{position:fixed;inset:0;background:rgba(15,23,42,.65);display:none;align-items:flex-start;justify-content:center;z-index:9999;overflow-y:auto;padding:30px 16px;font-family:Arial,Verdana}'+
+      '#modal-pagamento.visivel{display:flex}'+
+      '#modal-pagamento .box{background:#fff;border-radius:14px;width:100%;max-width:560px;box-shadow:0 20px 50px rgba(0,0,0,.35);overflow:hidden;color:#1f2937}'+
+      '#modal-pagamento .head{background:linear-gradient(135deg,#0b3870,#0a2c5c);color:#fff;padding:18px 22px;display:flex;justify-content:space-between;align-items:center}'+
+      '#modal-pagamento .head h3{margin:0;font-size:18px;font-weight:700;letter-spacing:.3px}'+
+      '#modal-pagamento .close{background:transparent;border:none;color:#fff;font-size:24px;cursor:pointer;padding:0 4px;line-height:1}'+
+      '#modal-pagamento .body{padding:20px 22px}'+
+      '#modal-pagamento .info{display:grid;grid-template-columns:120px 1fr;gap:6px 12px;font-size:13.5px;margin-bottom:18px}'+
+      '#modal-pagamento .info b{color:#0b3870;font-weight:700}'+
+      '#modal-pagamento .info span{color:#1f2937}'+
+      '#modal-pagamento .valor{background:#ecfdf5;border:1px solid #86efac;color:#166534;border-radius:10px;padding:10px 14px;text-align:center;margin-bottom:18px;font-size:14px}'+
+      '#modal-pagamento .valor b{font-size:22px;display:block;margin-top:3px}'+
+      '#modal-pagamento .qr-wrap{display:flex;justify-content:center;margin:14px 0 12px}'+
+      '#modal-pagamento .qr-box{background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:14px}'+
+      '#modal-pagamento .label{font-size:12px;color:#64748b;text-align:center;margin-bottom:6px}'+
+      '#modal-pagamento .pix-code{display:flex;gap:8px;margin-top:10px}'+
+      '#modal-pagamento .pix-code input{flex:1;font-family:Consolas,Menlo,monospace;font-size:11.5px;padding:9px 10px;border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc;color:#1f2937;overflow:hidden}'+
+      '#modal-pagamento .pix-code button{background:#0b3870;color:#fff;border:none;padding:0 14px;font-size:12px;font-weight:700;border-radius:8px;cursor:pointer;white-space:nowrap;letter-spacing:.3px}'+
+      '#modal-pagamento .pix-code button:hover{background:#0a2c5c}'+
+      '#modal-pagamento .copied{color:#16a34a;font-size:12px;text-align:center;margin-top:6px;font-weight:600;visibility:hidden}'+
+      '#modal-pagamento .copied.show{visibility:visible}'+
+      '#modal-pagamento .footer-info{font-size:11.5px;color:#64748b;text-align:center;margin-top:14px;border-top:1px solid #e5e7eb;padding-top:12px}'+
+      '#modal-pagamento .simular{margin-top:14px;background:#f59e0b;color:#fff;border:none;padding:9px 18px;font-size:13px;font-weight:700;border-radius:8px;cursor:pointer;width:100%}'+
+      '#modal-pagamento .simular:hover{background:#d97706}';
+    var st = document.createElement('style');
+    st.textContent = css;
+    document.head.appendChild(st);
+
+    var div = document.createElement('div');
+    div.id = 'modal-pagamento';
+    div.setAttribute('data-testid','modal-pagamento');
+    div.innerHTML =
+      '<div class="box">'+
+        '<div class="head">'+
+          '<h3>Pagamento via PIX</h3>'+
+          '<button class="close" type="button" data-testid="modal-close" aria-label="Fechar">&times;</button>'+
+        '</div>'+
+        '<div class="body">'+
+          '<div class="info" id="modal-info"></div>'+
+          '<div class="valor">Valor a pagar<b id="modal-valor">R$ 0,00</b></div>'+
+          '<div class="label"><b>Escaneie o QR code com o app do seu banco</b></div>'+
+          '<div class="qr-wrap"><div class="qr-box" id="modal-qr"></div></div>'+
+          '<div class="label">Ou use o PIX copia e cola</div>'+
+          '<div class="pix-code">'+
+            '<input type="text" id="modal-pix-text" readonly data-testid="pix-text">'+
+            '<button type="button" id="modal-copy-btn" data-testid="copy-btn">📋 Copiar</button>'+
+          '</div>'+
+          '<div class="copied" id="modal-copied">✓ Código PIX copiado!</div>'+
+          '<button type="button" class="simular" id="modal-simular" data-testid="modal-simular">Já paguei (simular confirmação)</button>'+
+          '<div class="footer-info">O pagamento expira em 30 minutos. Após o pagamento, a confirmação pode levar até alguns minutos.</div>'+
+        '</div>'+
+      '</div>';
+    document.body.appendChild(div);
+
+    div.addEventListener('click', function(e){
+      if(e.target === div) closeModal();
+    });
+    div.querySelector('.close').addEventListener('click', closeModal);
+    div.querySelector('#modal-copy-btn').addEventListener('click', function(){
+      var inp = document.getElementById('modal-pix-text');
+      inp.select(); inp.setSelectionRange(0, 99999);
+      try {
+        if(navigator.clipboard) navigator.clipboard.writeText(inp.value);
+        else document.execCommand('copy');
+        var msg = document.getElementById('modal-copied');
+        msg.classList.add('show');
+        setTimeout(function(){ msg.classList.remove('show'); }, 2200);
+      } catch(e){}
+    });
+    div.querySelector('#modal-simular').addEventListener('click', function(){
+      var idx = parseInt(div.getAttribute('data-idx'), 10);
+      if(!isNaN(idx) && inscricoes[idx]){
+        inscricoes[idx].status = 'PAGO';
+        try { sessionStorage.setItem('idecan_inscricoes', JSON.stringify(inscricoes)); } catch(e){}
+        closeModal();
+        location.reload();
+      }
+    });
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'Escape' && div.classList.contains('visivel')) closeModal();
+    });
   }
+
+  function closeModal(){
+    var d = document.getElementById('modal-pagamento');
+    if(d) d.classList.remove('visivel');
+  }
+
+  /* Gerador de QR code VISUAL (mock determinístico baseado no protocolo)
+     Mostra um QR-like SVG com marcadores de canto e padrão pseudo-aleatório. */
+  function gerarQR(text, size){
+    var grid = 29, cell = size/grid;
+    var hash = 5381;
+    for(var i=0;i<text.length;i++) hash = ((hash << 5) + hash + text.charCodeAt(i)) | 0;
+    function next(){ hash = (hash * 1103515245 + 12345) | 0; return ((hash>>>16) & 0x7FFF) / 32768; }
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+size+' '+size+'" width="'+size+'" height="'+size+'" shape-rendering="crispEdges">'+
+      '<rect width="'+size+'" height="'+size+'" fill="white"/>';
+    function isFinder(x,y){
+      return (x<8 && y<8) || (x>=grid-8 && y<8) || (x<8 && y>=grid-8);
+    }
+    for(var y=0;y<grid;y++){
+      for(var x=0;x<grid;x++){
+        if(isFinder(x,y)) continue;
+        if(next() < 0.48) svg += '<rect x="'+(x*cell)+'" y="'+(y*cell)+'" width="'+cell+'" height="'+cell+'" fill="#0b1733"/>';
+      }
+    }
+    function corner(cx,cy){
+      svg += '<rect x="'+(cx*cell)+'" y="'+(cy*cell)+'" width="'+(7*cell)+'" height="'+(7*cell)+'" fill="#0b1733"/>';
+      svg += '<rect x="'+((cx+1)*cell)+'" y="'+((cy+1)*cell)+'" width="'+(5*cell)+'" height="'+(5*cell)+'" fill="white"/>';
+      svg += '<rect x="'+((cx+2)*cell)+'" y="'+((cy+2)*cell)+'" width="'+(3*cell)+'" height="'+(3*cell)+'" fill="#0b1733"/>';
+    }
+    corner(0,0); corner(grid-7,0); corner(0,grid-7);
+    svg += '</svg>';
+    return svg;
+  }
+
+  function abrirModal(idx){
+    buildModal();
+    var ins = inscricoes[idx];
+    if(!ins) return;
+    var modal = document.getElementById('modal-pagamento');
+    modal.setAttribute('data-idx', idx);
+
+    var cargoLabel = (ins.codigo ? ins.codigo + ' - ' : '') + (ins.titulo || '') + (ins.jornada ? ' - ' + ins.jornada : '');
+    var taxa = ins.taxa || '';
+    document.getElementById('modal-info').innerHTML =
+      '<b>Candidato:</b><span>' + escape(data.nome || 'Candidato') + '</span>' +
+      '<b>CPF:</b><span>' + escape(data.cpf || '') + '</span>' +
+      '<b>Concurso:</b><span>' + escape(ins.concurso) + '</span>' +
+      '<b>Cargo:</b><span>' + escape(cargoLabel) + '</span>' +
+      '<b>Localidade:</b><span>' + escape(ins.localidade || 'CAMPINA GRANDE/PB') + '</span>' +
+      '<b>Protocolo:</b><span>' + escape(ins.protocolo) + '</span>';
+    document.getElementById('modal-valor').textContent = taxa;
+
+    /* Gera código PIX (BR Code simulado, formato EMV) */
+    var taxaNum = (taxa.replace(/[^\d,]/g,'').replace(',','.')) || '0';
+    var pixKey = '12345678000190'; /* CNPJ simulado IDECAN */
+    var nomeRec = 'IDECAN INSTITUTO DE DESENV';
+    var cidadeRec = 'BRASILIA';
+    var txid = ins.protocolo || ('IDC' + Date.now());
+    var pixCode =
+      '00020126580014BR.GOV.BCB.PIX0114' + pixKey +
+      '52040000530398654' + ('0'+taxaNum.length).slice(-2) + taxaNum +
+      '5802BR5925' + nomeRec.slice(0,25).padEnd(25,' ').trim() +
+      '6008' + cidadeRec.slice(0,8).padEnd(8,' ').trim() +
+      '62' + ('0'+(4+txid.length)).slice(-2) + '05' + ('0'+txid.length).slice(-2) + txid +
+      '6304ABCD';
+    document.getElementById('modal-pix-text').value = pixCode;
+    document.getElementById('modal-qr').innerHTML = gerarQR(pixCode, 200);
+    document.getElementById('modal-copied').classList.remove('show');
+
+    modal.classList.add('visivel');
+  }
+
+  /* Liga os botões "Pagar Inscrição" */
+  Array.prototype.forEach.call(document.querySelectorAll('.btn-pagar-inscricao'), function(btn){
+    btn.addEventListener('click', function(){
+      if(btn.disabled) return;
+      abrirModal(parseInt(btn.getAttribute('data-idx'), 10));
+    });
+  });
 })();
 </script>
 </body>
