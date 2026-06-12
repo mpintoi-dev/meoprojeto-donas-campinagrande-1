@@ -586,17 +586,19 @@
   var cargos = (window.__cargosData && window.__cargosData.cargos) || [];
 
   function findCargo(optionText){
+    /* Lê sempre da fonte atualizada (caso edital tenha sido trocado) */
+    var lista = (window.__cargosData && window.__cargosData.cargos) || cargos;
     if(!optionText) return null;
     /* Tenta achar por código (CÓD/COD seguido de número) */
     var mCode = optionText.match(/(C[ÓO]D)\s*(\d+)/i);
     if(mCode){
       var code = ('COD ' + mCode[2]);
-      var byCode = cargos.find(function(c){ return c.codigo === code; });
+      var byCode = lista.find(function(c){ return c.codigo === code; });
       if(byCode) return byCode;
     }
     /* Fallback: pelo título */
     var clean = optionText.replace(/^C[ÓO]D\s*\d+\s*-\s*/i,'').replace(/\s*-\s*[A-Z]+$/,'').trim();
-    return cargos.find(function(c){ return c.titulo === clean; }) || null;
+    return lista.find(function(c){ return c.titulo === clean; }) || null;
   }
 
   sel.addEventListener('change', function(){
