@@ -1,14 +1,14 @@
-"""Remove external links from the user's HTML file."""
+"""Clean external links from an HTML file and save it under public/."""
 import re
+import sys
 from pathlib import Path
 
-SRC = Path("/app/uploaded/idecan.html")
-DST = Path("/app/frontend/public/idecan.html")
+src = Path(sys.argv[1])
+dst = Path(sys.argv[2])
 
-html = SRC.read_text(encoding="utf-8", errors="ignore")
+html = src.read_text(encoding="utf-8", errors="ignore")
 
-# Remove <link rel=...> tags that point to external URLs
-# Matches <link ... href=...idecan.org.br...> or gmpg.org, etc.
+# Remove external <link> tags
 html = re.sub(
     r'<link\b[^>]*href=(?:"[^"]*(?:gmpg\.org|idecan\.org\.br|wp-json|xmlrpc|w\.org)[^"]*"|(?:https?://)[^\s>]+)[^>]*>',
     '',
@@ -16,23 +16,14 @@ html = re.sub(
     flags=re.IGNORECASE,
 )
 
-# Neutralize all href links that point to external URLs (http/https)
-# 1. quoted form: href="https://..."  -> href="#"
+# Neutralize all external href/src/action
 html = re.sub(r'href="https?://[^"]*"', 'href="#"', html, flags=re.IGNORECASE)
-# 2. unquoted form: href=https://...
 html = re.sub(r'href=https?://[^\s>]+', 'href="#"', html, flags=re.IGNORECASE)
-
-# Remove src attributes pointing to external URLs (if any)
 html = re.sub(r'src="https?://[^"]*"', 'src=""', html, flags=re.IGNORECASE)
 html = re.sub(r'src=https?://[^\s>]+', 'src=""', html, flags=re.IGNORECASE)
-
-# Remove action attributes pointing to external URLs (forms)
 html = re.sub(r'action="https?://[^"]*"', 'action="#"', html, flags=re.IGNORECASE)
 html = re.sub(r'action=https?://[^\s>]+', 'action="#"', html, flags=re.IGNORECASE)
 
-DST.parent.mkdir(parents=True, exist_ok=True)
-DST.write_text(html, encoding="utf-8")
-
-print(f"Original size: {SRC.stat().st_size} bytes")
-print(f"Cleaned size:  {DST.stat().st_size} bytes")
-print(f"Saved to: {DST}")
+dst.parent.mkdir(parents=True, exist_ok=True)
+dst.write_text(html, encoding="utf-8")
+print(f"OK | {src.stat().st_size} -> {dst.stat().st_size} bytes")
