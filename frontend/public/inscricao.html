@@ -7,12 +7,41 @@
 <style>
 *,*::before,*::after{box-sizing:border-box}
 html,body{margin:0;padding:0;background:#f3f5f8;color:#1f2937;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.45}
-header{background:linear-gradient(90deg,#0b3870 0%,#0a2c5c 100%);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
-.logo{font-weight:800;font-size:20px;letter-spacing:.5px}
-.back{background:#fff;color:#0b3870;text-decoration:none;padding:7px 14px;border-radius:30px;font-size:14px;font-weight:600;transition:background .2s}
-.back:hover{background:#e5edf7}
-.container{max-width:760px;margin:24px auto;padding:0 16px}
-h1{font-size:22px;margin:0 0 18px;color:#0b3870;font-weight:700}
+
+/* === Header (matches IDECAN home) === */
+.site-header{
+  background:#0b1733;
+  padding:18px 40px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+  flex-wrap:wrap;
+}
+.site-header .logo-wrap{display:flex;align-items:center}
+.site-header .logo{
+  display:block;
+  width:280px;
+  max-width:60vw;
+  height:auto;
+}
+.site-nav{display:flex;align-items:center;gap:36px;flex-wrap:wrap}
+.site-nav a{
+  color:#fff;
+  text-decoration:none;
+  font-size:15px;
+  font-weight:600;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  padding:6px 2px;
+  border-bottom:2px solid transparent;
+  transition:border-color .2s, color .2s;
+}
+.site-nav a:hover{border-bottom-color:#3b82f6;color:#cfe1ff}
+
+/* === Body content === */
+.container{max-width:760px;margin:28px auto;padding:0 16px}
+h1{font-size:24px;margin:0 0 18px;color:#0b3870;font-weight:700}
 .intro{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;font-size:14.5px;margin-bottom:18px}
 form{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px 18px 22px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
 fieldset{border:1px solid #d8dde7;border-radius:10px;padding:14px 16px 16px;margin:0 0 18px}
@@ -37,26 +66,43 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#1d4ed8;box-sh
 footer{text-align:center;padding:20px 16px 28px;font-size:13px;color:#475569}
 .success{display:none;background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:14px}
 .success.visible{display:block}
+
+@media (max-width:760px){
+  .site-header{padding:14px 18px;gap:14px}
+  .site-header .logo{width:200px}
+  .site-nav{gap:18px;width:100%;justify-content:flex-start}
+  .site-nav a{font-size:13px;letter-spacing:.8px}
+}
 @media (max-width:560px){
-  header{padding:12px 14px}
-  .logo{font-size:17px}
-  .container{padding:0 10px;margin:16px auto}
-  h1{font-size:19px}
+  .container{padding:0 10px;margin:18px auto}
+  h1{font-size:20px}
   form{padding:14px}
   fieldset{padding:12px}
   .btn-submit{width:100%;padding:14px}
+  .site-nav{gap:14px}
 }
 </style>
 </head>
 <body>
-<header>
-  <a href="/" style="color:#fff;text-decoration:none" data-testid="header-logo"><span class="logo">IDECAN</span></a>
-  <a href="/" class="back" data-testid="back-home-btn">← Voltar para a Home</a>
+
+<header class="site-header" data-testid="site-header">
+  <div class="logo-wrap">
+    <a href="/" data-testid="header-logo-link">
+      <img src="/assets/626c065653b58e44.webp" alt="IDECAN +25" class="logo">
+    </a>
+  </div>
+  <nav class="site-nav" data-testid="site-nav">
+    <a href="/" data-testid="nav-concursos">CONCURSOS</a>
+    <a href="/#contato" data-testid="nav-contato">CONTATO</a>
+    <a href="/#noticias" data-testid="nav-noticias">NOTÍCIAS</a>
+    <a href="#" data-testid="nav-login">LOGIN</a>
+  </nav>
 </header>
+
 <main class="container">
   <h1>Cadastro / Inscrição On-line</h1>
   <div class="intro">
-    Para iniciar sua inscrição preencha os dados abaixo. Os campos marcados como (Obrigatório) são necessários.
+    Para iniciar sua inscrição preencha os dados abaixo.
     Em caso de dúvidas, entre em contato pelo telefone <strong>(61) 3201-6225</strong> ou e-mail <strong>atendimento@idecan.org.br</strong>.
   </div>
   <div class="success" id="success-msg" data-testid="success-msg">
@@ -64,20 +110,6 @@ footer{text-align:center;padding:20px 16px 28px;font-size:13px;color:#475569}
   </div>
 
   <form id="cadastro-form" data-testid="cadastro-form" novalidate>
-
-    <fieldset>
-      <legend>Envio de foto (Obrigatório)</legend>
-      <div class="row">
-        <div class="field" style="flex:2 1 320px">
-          <label for="foto-descricao">Descrição (Opcional)</label>
-          <input type="text" id="foto-descricao" name="foto-descricao" data-testid="input-foto-descricao">
-        </div>
-        <div class="field">
-          <label for="foto-arquivo">Arquivo</label>
-          <input type="file" id="foto-arquivo" name="foto-arquivo" accept="image/*" data-testid="input-foto-arquivo">
-        </div>
-      </div>
-    </fieldset>
 
     <fieldset>
       <legend>Dados Pessoais</legend>
