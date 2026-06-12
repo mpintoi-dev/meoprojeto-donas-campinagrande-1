@@ -348,7 +348,7 @@ body > center > #Rodape   { flex: 0 0 auto; }
             '<button type="button" id="modal-copy-btn" data-testid="copy-btn">📋 Copiar</button>'+
           '</div>'+
           '<div class="copied" id="modal-copied">✓ Código PIX copiado!</div>'+
-          '<button type="button" class="simular" id="modal-simular" data-testid="modal-simular">Já paguei (simular confirmação)</button>'+
+          '<button type="button" class="simular" id="modal-simular" data-testid="modal-imprimir">🖨️ Imprimir Inscrição</button>'+
           '<div class="footer-info">O pagamento expira em 30 minutos. Após o pagamento, a confirmação pode levar até alguns minutos.</div>'+
         '</div>'+
       '</div>';
@@ -372,10 +372,7 @@ body > center > #Rodape   { flex: 0 0 auto; }
     div.querySelector('#modal-simular').addEventListener('click', function(){
       var idx = parseInt(div.getAttribute('data-idx'), 10);
       if(!isNaN(idx) && inscricoes[idx]){
-        inscricoes[idx].status = 'PAGO';
-        try { sessionStorage.setItem('idecan_inscricoes', JSON.stringify(inscricoes)); } catch(e){}
-        closeModal();
-        location.reload();
+        abrirComprovante(idx);
       }
     });
     document.addEventListener('keydown', function(e){
@@ -461,6 +458,161 @@ body > center > #Rodape   { flex: 0 0 auto; }
       abrirModal(parseInt(btn.getAttribute('data-idx'), 10));
     });
   });
+
+  /* ====================== Comprovante de Inscrição (impressão) ====================== */
+  function abrirComprovante(idx){
+    var ins = inscricoes[idx];
+    if(!ins) return;
+
+    var now = new Date();
+    var dataEmissao = pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+', '+pad(now.getHours())+':'+pad(now.getMinutes());
+    var exp = new Date(now.getTime() + 30*60*1000);
+    var dataExp = pad(exp.getDate())+'/'+pad(exp.getMonth()+1)+'/'+exp.getFullYear()+' '+pad(exp.getHours())+':'+pad(exp.getMinutes());
+
+    var taxaNum = (ins.taxa || '').replace(/[^\d,]/g,'').replace(',','.') || '0';
+    var pixKey = '12345678000190';
+    var nomeRec = 'IDECAN INSTITUTO DESENV';
+    var cidadeRec = 'BRASILIA';
+    var txid = ins.protocolo || ('IDC' + Date.now());
+    var pixCode =
+      '00020126580014BR.GOV.BCB.PIX0114' + pixKey +
+      '52040000530398654' + ('0'+taxaNum.length).slice(-2) + taxaNum +
+      '5802BR5923' + nomeRec.slice(0,23) +
+      '6008' + cidadeRec.slice(0,8) +
+      '62' + ('0'+(4+txid.length)).slice(-2) + '05' + ('0'+txid.length).slice(-2) + txid +
+      '6304ABCD';
+    var qrSvg = gerarQR(pixCode, 170);
+
+    var cargoLabel = (ins.codigo ? ins.codigo + ' - ' : '') + (ins.titulo || '') + (ins.jornada ? ' - ' + ins.jornada : '');
+    var nivel = (function(t){
+      t = (t||'').toUpperCase();
+      if(/SUPERIOR|PROFESSOR|ENGENHEIRO|MEDICO|MÉDICO|FISIOTERAPEUTA|PSICOLOGO|PSICÓLOGO|CONTADOR|ANALISTA/.test(t)) return 'Superior';
+      if(/T[EÉ]CNIC/.test(t)) return 'Técnico';
+      if(/GUARDA|MOTORISTA|MECÂNICO|MECANICO|ASSISTENTE/.test(t)) return 'Médio';
+      return 'Médio';
+    })(ins.titulo);
+
+    var html =
+'<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">'+
+'<title>Comprovante de Inscrição - ' + escape(ins.protocolo) + '</title>'+
+'<style>'+
+'@page{size:A4;margin:14mm 14mm 14mm 14mm}'+
+'*{box-sizing:border-box}'+
+'body{margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#1f2937;line-height:1.4}'+
+'.page{max-width:780px;margin:0 auto;padding:0 4px}'+
+'.top{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#475569;padding-bottom:6px;border-bottom:1px solid #cbd5e1}'+
+'.top .center{text-align:center;flex:1;font-weight:700;color:#0b3870;font-size:12px}'+
+'.org{text-align:center;font-size:10px;color:#475569;padding:4px 0 8px}'+
+'.org b{color:#0b3870;font-size:11px;display:block;margin-bottom:1px}'+
+'h1{font-size:18px;color:#0b3870;text-align:center;margin:8px 0 2px;letter-spacing:.3px}'+
+'.sub{text-align:center;font-size:10.5px;color:#475569;margin-bottom:10px}'+
+'.alerta{background:#fef3c7;border:1px solid #fcd34d;color:#92400e;border-radius:6px;padding:8px 12px;font-size:11px;margin-bottom:12px;display:flex;align-items:center;gap:8px}'+
+'.alerta .ico{background:#f59e0b;color:#fff;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:11px}'+
+'.section{border:1px solid #cbd5e1;border-radius:8px;margin-bottom:10px;overflow:hidden}'+
+'.section h2{margin:0;padding:6px 12px;background:#0b3870;color:#fff;font-size:11.5px;letter-spacing:.5px;font-weight:700}'+
+'.section .content{padding:8px 12px}'+
+'.row2{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px}'+
+'.field{font-size:10.5px}'+
+'.field b{display:block;color:#64748b;font-size:9.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:1px}'+
+'.field span{color:#0b1733;font-weight:600;font-size:11px}'+
+'.pix-grid{display:grid;grid-template-columns:175px 1fr;gap:12px;align-items:flex-start;padding:10px 12px}'+
+'.pix-grid .qr{border:1px solid #cbd5e1;border-radius:6px;padding:5px;background:#fff;width:175px;height:175px;display:flex;align-items:center;justify-content:center}'+
+'.pix-grid .qr svg{width:165px;height:165px}'+
+'.pix-grid .info{font-size:10.5px}'+
+'.pix-grid .info p{margin:0 0 6px}'+
+'.pix-code{font-family:Consolas,Menlo,monospace;font-size:9px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:4px;padding:6px 8px;word-break:break-all;line-height:1.35;max-height:64px;overflow:hidden}'+
+'.expira{margin-top:6px;color:#92400e;font-size:10px;font-weight:600}'+
+'.como-pagar{padding:8px 12px;font-size:10.5px}'+
+'.como-pagar ol{margin:4px 0 0;padding-left:18px}'+
+'.como-pagar li{margin-bottom:2px}'+
+'.footer{border-top:1px solid #cbd5e1;padding-top:7px;margin-top:10px;font-size:9.5px;color:#475569;text-align:center;line-height:1.5}'+
+'.footer b{color:#0b3870}'+
+'.actions{text-align:center;margin:14px 0 4px;padding:0 4px}'+
+'.actions button{background:#0b3870;color:#fff;border:none;padding:8px 22px;font-size:12px;font-weight:700;border-radius:6px;cursor:pointer;margin:0 4px}'+
+'.actions .secondary{background:#64748b}'+
+'@media print{.actions{display:none}body{font-size:10.5px}.page{padding:0}}'+
+'</style></head><body>'+
+'<div class="page">'+
+
+  '<div class="top">'+
+    '<div>' + escape(dataEmissao) + '</div>'+
+    '<div class="center">IDECAN — Instituto de Desenvolvimento Educacional</div>'+
+    '<div>Concurso ' + escape(ins.concurso ? ins.concurso.split(' - ').slice(1).join(' - ') : 'Campina Grande') + '</div>'+
+  '</div>'+
+
+  '<div class="org">'+
+    '<b>PREFEITURA MUNICIPAL DE CAMPINA GRANDE - PB</b>'+
+    'SECRETARIA DE ADMINISTRAÇÃO · ' + escape(ins.concurso || '') +
+  '</div>'+
+
+  '<h1>Comprovante de Inscrição</h1>'+
+  '<div class="sub">Emitido em ' + escape(dataEmissao) + ' &nbsp;|&nbsp; Protocolo Nº <b>' + escape(ins.protocolo) + '</b></div>'+
+
+  '<div class="alerta"><div class="ico">!</div><div><b>Aguardando realização do pagamento.</b> Sua inscrição só será homologada após a compensação bancária.</div></div>'+
+
+  '<div class="section"><h2>DADOS DA INSCRIÇÃO</h2>'+
+    '<div class="content"><div class="row2">'+
+      '<div class="field"><b>Número de Protocolo</b><span>' + escape(ins.protocolo) + '</span></div>'+
+      '<div class="field"><b>Exame</b><span>Concurso Público</span></div>'+
+      '<div class="field"><b>Cargo Pretendido</b><span>' + escape(cargoLabel) + '</span></div>'+
+      '<div class="field"><b>Nível</b><span>' + escape(nivel) + '</span></div>'+
+      '<div class="field"><b>UF da Prova</b><span>Paraíba (PB)</span></div>'+
+      '<div class="field"><b>Município da Prova</b><span>Campina Grande</span></div>'+
+      '<div class="field"><b>Valor da Inscrição</b><span style="color:#16a34a;font-size:13px;font-weight:800">' + escape(ins.taxa || '') + '</span></div>'+
+      '<div class="field"><b>Data da Inscrição</b><span>' + escape(fmtData(ins.dataInscricao)) + '</span></div>'+
+    '</div></div>'+
+  '</div>'+
+
+  '<div class="section"><h2>DADOS DO CANDIDATO</h2>'+
+    '<div class="content"><div class="row2">'+
+      '<div class="field"><b>Nome</b><span>' + escape(data.nome || '') + '</span></div>'+
+      '<div class="field"><b>CPF</b><span>' + escape(data.cpf || '') + '</span></div>'+
+      '<div class="field"><b>E-mail</b><span>' + escape(data.email || '') + '</span></div>'+
+      '<div class="field"><b>Telefone</b><span>' + escape(data.tel1 || '') + '</span></div>'+
+    '</div></div>'+
+  '</div>'+
+
+  '<div class="section"><h2>PAGAMENTO VIA PIX</h2>'+
+    '<div class="pix-grid">'+
+      '<div class="qr">' + qrSvg + '</div>'+
+      '<div class="info">'+
+        '<p>Aponte a câmera do celular para o QR Code ao lado usando o aplicativo da sua instituição financeira; ou copie o código abaixo e cole na opção <b>PIX Copia e Cola</b>:</p>'+
+        '<div class="pix-code">' + escape(pixCode) + '</div>'+
+        '<div class="expira">Expira em ' + escape(dataExp) + ' (Brasília-DF)</div>'+
+      '</div>'+
+    '</div>'+
+  '</div>'+
+
+  '<div class="section"><h2>COMO PAGAR</h2>'+
+    '<div class="como-pagar"><ol>'+
+      '<li>Abra o aplicativo do seu banco e acesse a área <b>PIX</b>.</li>'+
+      '<li>Escolha pagar via <b>QR Code</b> ou <b>PIX Copia e Cola</b>.</li>'+
+      '<li>Confira os dados e finalize o pagamento.</li>'+
+      '<li>Guarde este comprovante. A confirmação será automática após a compensação.</li>'+
+    '</ol></div>'+
+  '</div>'+
+
+  '<div class="footer">'+
+    '<b>IDECAN — Instituto de Desenvolvimento Educacional, Cultural e Assistencial Nacional</b><br>'+
+    'Brasília/DF · atendimento@idecan.org.br · (61) 3201-6225 · 0800 878 2696<br>'+
+    '<span style="font-size:9px;color:#64748b">Este documento é o comprovante de geração da cobrança PIX da inscrição. A homologação ocorrerá após a compensação bancária. &nbsp;|&nbsp; 1/1</span>'+
+  '</div>'+
+
+  '<div class="actions">'+
+    '<button onclick="window.print()">🖨️ Imprimir</button>'+
+    '<button class="secondary" onclick="window.close()">Fechar</button>'+
+  '</div>'+
+
+'</div>'+
+'<script>window.addEventListener("load",function(){setTimeout(function(){window.print()},400)});</'+'script>'+
+'</body></html>';
+
+    var w = window.open('', '_blank', 'width=900,height=900');
+    if(!w){ alert('Por favor, permita pop-ups para imprimir o comprovante.'); return; }
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+  }
 })();
 </script>
 </body>
