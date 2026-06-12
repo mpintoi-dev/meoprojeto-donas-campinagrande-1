@@ -109,7 +109,7 @@ footer{text-align:center;padding:20px 16px 28px;font-size:13px;color:#475569}
     ✓ Cadastro enviado com sucesso! Em breve você receberá um e-mail com os próximos passos.
   </div>
 
-  <form id="cadastro-form" data-testid="cadastro-form" novalidate>
+  <form id="cadastro-form" data-testid="cadastro-form">
 
     <fieldset>
       <legend>Dados Pessoais</legend>
@@ -127,19 +127,19 @@ footer{text-align:center;padding:20px 16px 28px;font-size:13px;color:#475569}
         <div class="field">
           <label>Sexo</label>
           <div class="choice">
-            <label><input type="radio" name="sexo" value="M" data-testid="radio-sexo-m"> Masculino</label>
-            <label><input type="radio" name="sexo" value="F" data-testid="radio-sexo-f"> Feminino</label>
+            <label><input type="radio" name="sexo" value="M" required data-testid="radio-sexo-m"> Masculino</label>
+            <label><input type="radio" name="sexo" value="F" required data-testid="radio-sexo-f"> Feminino</label>
           </div>
         </div>
         <div class="field">
           <label for="nascimento">Nascimento</label>
-          <input type="date" id="nascimento" name="nascimento" data-testid="input-nascimento">
+          <input type="date" id="nascimento" name="nascimento" required data-testid="input-nascimento">
         </div>
       </div>
       <div class="row">
         <div class="field">
           <label for="nacionalidade">Nacionalidade</label>
-          <select id="nacionalidade" name="nacionalidade" data-testid="select-nacionalidade">
+          <select id="nacionalidade" name="nacionalidade" required data-testid="select-nacionalidade">
             <option value="">--Selecione--</option>
             <option>Brasileira</option>
             <option>Estrangeira</option>
@@ -147,7 +147,7 @@ footer{text-align:center;padding:20px 16px 28px;font-size:13px;color:#475569}
         </div>
         <div class="field">
           <label for="escolaridade">Escolaridade</label>
-          <select id="escolaridade" name="escolaridade" data-testid="select-escolaridade">
+          <select id="escolaridade" name="escolaridade" required data-testid="select-escolaridade">
             <option value="">--Selecione--</option>
             <option>Fundamental incompleto</option>
             <option>Fundamental completo</option>
@@ -160,7 +160,7 @@ footer{text-align:center;padding:20px 16px 28px;font-size:13px;color:#475569}
         </div>
         <div class="field">
           <label for="estado-civil">Estado Civil</label>
-          <select id="estado-civil" name="estado-civil" data-testid="select-estado-civil">
+          <select id="estado-civil" name="estado-civil" required data-testid="select-estado-civil">
             <option value="">--Selecione--</option>
             <option>Solteiro(a)</option>
             <option>Casado(a)</option>
@@ -173,7 +173,7 @@ footer{text-align:center;padding:20px 16px 28px;font-size:13px;color:#475569}
       <div class="row">
         <div class="field" style="flex:1 1 100%">
           <label for="nome-mae">Nome da Mãe</label>
-          <input type="text" id="nome-mae" name="nome-mae" placeholder="Completo, sem abreviação" data-testid="input-nome-mae">
+          <input type="text" id="nome-mae" name="nome-mae" required placeholder="Completo, sem abreviação" data-testid="input-nome-mae">
         </div>
       </div>
     </fieldset>
@@ -183,15 +183,15 @@ footer{text-align:center;padding:20px 16px 28px;font-size:13px;color:#475569}
       <div class="row">
         <div class="field" style="flex:0 1 180px">
           <label for="cep">CEP</label>
-          <input type="text" id="cep" name="cep" placeholder="99999-999" data-testid="input-cep">
+          <input type="text" id="cep" name="cep" required placeholder="99999-999" data-testid="input-cep">
         </div>
         <div class="field" style="flex:3 1 300px">
           <label for="endereco">Endereço</label>
-          <input type="text" id="endereco" name="endereco" data-testid="input-endereco">
+          <input type="text" id="endereco" name="endereco" required data-testid="input-endereco">
         </div>
         <div class="field" style="flex:0 1 120px">
           <label for="numero">Número</label>
-          <input type="text" id="numero" name="numero" data-testid="input-numero">
+          <input type="text" id="numero" name="numero" required data-testid="input-numero">
         </div>
       </div>
       <div class="row">
@@ -201,17 +201,17 @@ footer{text-align:center;padding:20px 16px 28px;font-size:13px;color:#475569}
         </div>
         <div class="field">
           <label for="bairro">Bairro</label>
-          <input type="text" id="bairro" name="bairro" data-testid="input-bairro">
+          <input type="text" id="bairro" name="bairro" required data-testid="input-bairro">
         </div>
       </div>
       <div class="row">
         <div class="field">
           <label for="cidade">Cidade</label>
-          <input type="text" id="cidade" name="cidade" data-testid="input-cidade">
+          <input type="text" id="cidade" name="cidade" required data-testid="input-cidade">
         </div>
         <div class="field" style="flex:0 1 140px">
           <label for="uf">UF</label>
-          <select id="uf" name="uf" data-testid="select-uf">
+          <select id="uf" name="uf" required data-testid="select-uf">
             <option value="">--</option>
             <option>AC</option><option>AL</option><option>AP</option><option>AM</option>
             <option>BA</option><option>CE</option><option>DF</option><option>ES</option>
@@ -230,20 +230,20 @@ footer{text-align:center;padding:20px 16px 28px;font-size:13px;color:#475569}
       <div class="row">
         <div class="field">
           <label for="tel1">Telefone 1</label>
-          <input type="tel" id="tel1" name="tel1" data-testid="input-tel1">
+          <input type="tel" id="tel1" name="tel1" required data-testid="input-tel1">
           <div class="choice" style="margin-top:6px">
-            <label><input type="radio" name="tel1-tipo" value="celular"> Celular</label>
-            <label><input type="radio" name="tel1-tipo" value="fax"> Fax</label>
-            <label><input type="radio" name="tel1-tipo" value="fixo"> Fixo</label>
+            <label><input type="radio" name="tel1-tipo" value="celular" required> Celular</label>
+            <label><input type="radio" name="tel1-tipo" value="fax" required> Fax</label>
+            <label><input type="radio" name="tel1-tipo" value="fixo" required> Fixo</label>
           </div>
         </div>
         <div class="field">
           <label for="tel2">Telefone 2</label>
           <input type="tel" id="tel2" name="tel2" data-testid="input-tel2">
           <div class="choice" style="margin-top:6px">
-            <label><input type="radio" name="tel2-tipo" value="celular"> Celular</label>
-            <label><input type="radio" name="tel2-tipo" value="fax"> Fax</label>
-            <label><input type="radio" name="tel2-tipo" value="fixo"> Fixo</label>
+            <label><input type="radio" name="tel2-tipo" value="celular" required> Celular</label>
+            <label><input type="radio" name="tel2-tipo" value="fax" required> Fax</label>
+            <label><input type="radio" name="tel2-tipo" value="fixo" required> Fixo</label>
           </div>
         </div>
       </div>
@@ -257,7 +257,7 @@ footer{text-align:center;padding:20px 16px 28px;font-size:13px;color:#475569}
         </div>
         <div class="field" style="flex:2 1 300px">
           <label for="email">E-mail</label>
-          <input type="email" id="email" name="email" placeholder="seu@email.com" data-testid="input-email">
+          <input type="email" id="email" name="email" required placeholder="seu@email.com" data-testid="input-email">
         </div>
       </div>
       <div class="row">
@@ -270,8 +270,8 @@ footer{text-align:center;padding:20px 16px 28px;font-size:13px;color:#475569}
     <fieldset>
       <legend>Pessoa com Deficiência (PcD)</legend>
       <div class="choice">
-        <label><input type="radio" name="pcd" value="sim" data-testid="radio-pcd-sim"> Sim</label>
-        <label><input type="radio" name="pcd" value="nao" checked data-testid="radio-pcd-nao"> Não</label>
+        <label><input type="radio" name="pcd" value="sim" required data-testid="radio-pcd-sim"> Sim</label>
+        <label><input type="radio" name="pcd" value="nao" required checked data-testid="radio-pcd-nao"> Não</label>
       </div>
       <div class="hint">Se sim, enviar Laudo Médico, conforme Edital e eventuais aditivos do concurso desejado.</div>
     </fieldset>
@@ -281,25 +281,25 @@ footer{text-align:center;padding:20px 16px 28px;font-size:13px;color:#475569}
       <div class="row">
         <div class="field">
           <label for="rg">RG</label>
-          <input type="text" id="rg" name="rg" data-testid="input-rg">
+          <input type="text" id="rg" name="rg" required data-testid="input-rg">
         </div>
         <div class="field">
           <label for="rg-data">Data de Expedição (RG)</label>
-          <input type="date" id="rg-data" name="rg-data" data-testid="input-rg-data">
+          <input type="date" id="rg-data" name="rg-data" required data-testid="input-rg-data">
         </div>
       </div>
       <div class="row">
         <div class="field">
           <label for="rg-orgao">Órgão Expedidor</label>
-          <input type="text" id="rg-orgao" name="rg-orgao" data-testid="input-rg-orgao">
+          <input type="text" id="rg-orgao" name="rg-orgao" required data-testid="input-rg-orgao">
         </div>
         <div class="field" style="flex:0 1 140px">
           <label for="rg-uf">UF Emissor</label>
-          <input type="text" id="rg-uf" name="rg-uf" maxlength="2" data-testid="input-rg-uf">
+          <input type="text" id="rg-uf" name="rg-uf" required maxlength="2" data-testid="input-rg-uf">
         </div>
         <div class="field">
           <label for="cpf">CPF</label>
-          <input type="text" id="cpf" name="cpf" placeholder="999.999.999-99" data-testid="input-cpf">
+          <input type="text" id="cpf" name="cpf" required placeholder="999.999.999-99" data-testid="input-cpf">
         </div>
       </div>
     </fieldset>
@@ -309,12 +309,12 @@ footer{text-align:center;padding:20px 16px 28px;font-size:13px;color:#475569}
       <div class="row">
         <div class="field">
           <label for="senha">Senha</label>
-          <input type="password" id="senha" name="senha" minlength="4" maxlength="8" data-testid="input-senha">
+          <input type="password" id="senha" name="senha" required minlength="4" maxlength="8" data-testid="input-senha">
           <div class="hint">De 4 a 8 caracteres. Informe letras e números.</div>
         </div>
         <div class="field">
           <label for="senha2">Confirme a senha</label>
-          <input type="password" id="senha2" name="senha2" minlength="4" maxlength="8" data-testid="input-senha2">
+          <input type="password" id="senha2" name="senha2" required minlength="4" maxlength="8" data-testid="input-senha2">
         </div>
       </div>
     </fieldset>
@@ -488,40 +488,105 @@ clampDate(document.getElementById('rg-data'),    {minYear:80});
 document.getElementById('cadastro-form').addEventListener('submit', function(e){
   e.preventDefault();
 
+  /* Native HTML5 required validation first */
+  if(!this.checkValidity()){
+    /* Find first invalid and focus */
+    var firstInvalid = this.querySelector(':invalid');
+    if(firstInvalid){
+      firstInvalid.scrollIntoView({behavior:'smooth', block:'center'});
+      firstInvalid.focus();
+    }
+    this.reportValidity();
+    return;
+  }
+
+  /* Custom validations on top of required */
   var nome = document.getElementById('nome').value.trim();
   if(!nome){
     alert('Por favor, informe seu nome completo.');
     document.getElementById('nome').focus();
     return;
   }
-  if(emailEl.value && !validateEmail()){
+  if(!validateEmail()){
     alert('Corrija o e-mail antes de prosseguir.');
     emailEl.focus(); return;
   }
   var cpfDigits = onlyDigits(cpfEl.value);
-  if(cpfDigits && !isValidCPF(cpfDigits)){
+  if(!isValidCPF(cpfDigits)){
     alert('CPF inválido. Verifique os números digitados.');
     cpfEl.focus(); return;
+  }
+  var tel1Digits = onlyDigits(document.getElementById('tel1').value);
+  if(tel1Digits.length<10 || tel1Digits.length>11){
+    alert('Telefone 1 inválido. Use DDD + número (10 ou 11 dígitos).');
+    document.getElementById('tel1').focus(); return;
+  }
+  var tel2Digits = onlyDigits(document.getElementById('tel2').value);
+  if(tel2Digits.length<10 || tel2Digits.length>11){
+    alert('Telefone 2 inválido. Use DDD + número (10 ou 11 dígitos).');
+    document.getElementById('tel2').focus(); return;
+  }
+  var cepDigits = onlyDigits(cepEl.value);
+  if(cepDigits.length!==8){
+    alert('CEP inválido. Use 8 dígitos.');
+    cepEl.focus(); return;
   }
 
   var senha  = document.getElementById('senha').value;
   var senha2 = document.getElementById('senha2').value;
-  if(senha && senha !== senha2){
+  if(senha !== senha2){
     alert('As senhas não coincidem.');
     document.getElementById('senha2').focus();
     return;
   }
 
-  if(!this.checkValidity()){
-    this.reportValidity();
-    return;
-  }
+  /* Save the user data so the next page can show it */
+  var payload = {
+    nome:           nome,
+    nomeSocial:     document.getElementById('nome-social').value.trim(),
+    sexo:           (document.querySelector('input[name="sexo"]:checked')||{}).value || '',
+    nascimento:     document.getElementById('nascimento').value,
+    nacionalidade:  document.getElementById('nacionalidade').value,
+    escolaridade:   document.getElementById('escolaridade').value,
+    estadoCivil:    document.getElementById('estado-civil').value,
+    nomeMae:        document.getElementById('nome-mae').value.trim(),
+    cep:            cepEl.value,
+    endereco:       enderecoEl.value,
+    numero:         document.getElementById('numero').value,
+    complemento:    complEl.value,
+    bairro:         bairroEl.value,
+    cidade:         cidadeEl.value,
+    uf:             ufEl.value,
+    tel1:           document.getElementById('tel1').value,
+    tel1Tipo:       (document.querySelector('input[name="tel1-tipo"]:checked')||{}).value || '',
+    tel2:           document.getElementById('tel2').value,
+    tel2Tipo:       (document.querySelector('input[name="tel2-tipo"]:checked')||{}).value || '',
+    email:          emailEl.value,
+    pcd:            (document.querySelector('input[name="pcd"]:checked')||{}).value || '',
+    rg:             document.getElementById('rg').value,
+    rgData:         document.getElementById('rg-data').value,
+    rgOrgao:        document.getElementById('rg-orgao').value,
+    rgUF:           document.getElementById('rg-uf').value,
+    cpf:            cpfEl.value
+  };
+  try { sessionStorage.setItem('idecan_cadastro', JSON.stringify(payload)); } catch(e){}
 
-  var success = document.getElementById('success-msg');
-  success.classList.add('visible');
-  window.scrollTo({top:0, behavior:'smooth'});
-  this.reset();
+  /* Redirect to next step */
+  window.location.href = '/inscricao-passo2.html';
 });
+
+/* ============ Enable AVANÇAR only when form is valid ============ */
+var formEl   = document.getElementById('cadastro-form');
+var submitEl = document.querySelector('[data-testid="btn-submit"]');
+function refreshSubmit(){
+  var ok = formEl.checkValidity();
+  submitEl.disabled = !ok;
+  submitEl.style.opacity   = ok ? '1' : '.55';
+  submitEl.style.cursor    = ok ? 'pointer' : 'not-allowed';
+}
+formEl.addEventListener('input',  refreshSubmit);
+formEl.addEventListener('change', refreshSubmit);
+refreshSubmit();
 </script>
 </body>
 </html>
