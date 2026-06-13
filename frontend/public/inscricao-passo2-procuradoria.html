@@ -154,7 +154,7 @@
  <table cellpadding=10 cellspacing=0 border=0>
  <tbody><tr>
  <td>
- <span id=LBL_DadosConcurso>Concurso: EDITAL 05 - CAMPINA GRANDE PROCURADOR MUNICIPAL<br>Entidade: PREFEITURA MUNICIPAL DE CAMPINA GRANDE – PB<br>Período de inscrições: 19/05/2026 a 15/06/2026</span>
+ <span id=LBL_DadosConcurso>Concurso: EDITAL 02 - CAMPINA GRANDE PROCURADOR MUNICIPAL<br>Entidade: PREFEITURA MUNICIPAL DE CAMPINA GRANDE – PB<br>Período de inscrições: 11/05/2026 a 15/06/2026</span>
  <br>
  <br>
  <br><input id=CheckVagaPCD type=checkbox name=CheckVagaPCD value=on>
@@ -183,7 +183,7 @@
  <td>
  <select name=CMB_Cargo id=CMB_Cargo style=width:600px>
 	<option value=-1>--Selecione--</option>
-	<option selected value=3035>COD 05100 - PROCURADOR MUNICIPAL - CAMPINA GRANDE/PB</option>
+	<option selected value=3035>COD 02200 - PROCURADOR MUNICIPAL - CONFORME NECESSIDADE</option>
 
 </select>
  </td>
@@ -269,7 +269,7 @@
  
  
  
- <span id=LBL_DadosCargo><br><br>Por favor, confirme as informações abaixo.<br><br><b>Cargo:</b> COD 05100 - PROCURADOR MUNICIPAL - 40H<br><b>Localidade:</b> CAMPINA GRANDE/PB<br><b>Escolaridade:</b> BACHARELADO EM DIREITO, DEVIDAMENTE REGISTRADO, FORNECIDO POR INSTITUIÇÃO DE ENSINO SUPERIOR RECONHECIDA PELO MEC, E REGISTRO DEFINITIVO NA ORDEM DOS ADVOGADOS DO BRASIL (OAB) HÁ NO MÍNIMO 03 ANOS.<br><b>Remuneração:</b> R$ 9.473,52<br><b>Vagas:</b> 4<br><b>Vagas PCD:</b> 1<br><b>Vagas PPP:</b> 0<br><b>Vagas Indígenas:</b> 0<br><b>Cadastro reserva:</b> 2<br><b>Taxa de inscrição:</b> R$ 200,00<br></span>
+ <span id=LBL_DadosCargo><br><br>Por favor, confirme as informações abaixo.<br><br><b>Cargo:</b> COD 02200 - PROCURADOR MUNICIPAL - 30H<br><b>Localidade:</b> CAMPINA GRANDE/PB<br><b>Escolaridade:</b> ENSINO SUPERIOR<br><b>Remuneração:</b> R$ 9.652,80<br><b>Vagas:</b> 5<br><b>Vagas PCD:</b> 1<br><b>Vagas PPP:</b> 0<br><b>Vagas Indígenas:</b> 0<br><b>Cadastro reserva:</b> -<br><b>Taxa de inscrição:</b> R$ 230,00<br></span>
  <div id=UpdatePanel_SolicitacaoAtendimentoEspecial>
  
  <br>
@@ -542,16 +542,16 @@
       alert('Por favor, escolha um cargo antes de avançar.'); sel.focus(); return;
     }
     var payload = {
-      concurso:   'EDITAL 05 - CAMPINA GRANDE PROCURADOR MUNICIPAL',
+      concurso:   'EDITAL 02 - CAMPINA GRANDE PROCURADOR MUNICIPAL',
       localidade: 'CAMPINA GRANDE/PB',
       cargoTexto: opt.text,
-      codigo:     'COD 05100',
+      codigo:     'COD 02200',
       titulo:     'PROCURADOR MUNICIPAL',
-      jornada:    '40H',
+      jornada:    '30H',
       secretaria: 'PROCURADORIA GERAL DO MUNICÍPIO (PGM)',
-      remuneracao:'R$ 9.473,52',
-      vagas:      4,
-      taxa:       'R$ 200,00'
+      remuneracao:'R$ 9.652,80',
+      vagas:      5,
+      taxa:       'R$ 230,00'
     };
     try {
       var arr = JSON.parse(sessionStorage.getItem('idecan_inscricoes') || '[]');

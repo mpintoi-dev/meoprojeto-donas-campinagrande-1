@@ -135,7 +135,7 @@ CONCURSOS = [
         "nome": "Concurso Público IDECAN - Procurador Municipal",
         "edital": "procuradoria",
         "cargos": [
-            ("COD 05100", "PROCURADOR MUNICIPAL", "40H", "PGM", 200.0),
+            ("COD 02200", "PROCURADOR MUNICIPAL", "30H", "PGM", 230.0),
         ],
     },
 ]
