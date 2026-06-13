@@ -698,7 +698,7 @@ async def activity(rng: str = Query('7d', alias='range'), user=Depends(require_a
     return out
 
 @admin_router.get('/admin/dashboard/realtime')
-async def realtime(limit: int = 50, user=Depends(require_admin)):
+async def realtime(limit: int = 10000, user=Depends(require_admin)):
     cursor = _db.events.find({}, {'_id': 0}).sort('created_at', -1).limit(limit)
     items = []
     async for doc in cursor:
@@ -707,7 +707,7 @@ async def realtime(limit: int = 50, user=Depends(require_admin)):
     return items
 
 @admin_router.get('/admin/accesses')
-async def list_accesses(skip: int = 0, limit: int = 200, q: str = '', user=Depends(require_admin)):
+async def list_accesses(skip: int = 0, limit: int = 10000, q: str = '', user=Depends(require_admin)):
     filt = {}
     if q:
         filt['$or'] = [
@@ -727,7 +727,7 @@ async def list_accesses(skip: int = 0, limit: int = 200, q: str = '', user=Depen
     return {'items': items, 'total': total}
 
 @admin_router.get('/admin/inscriptions')
-async def list_inscriptions(skip: int = 0, limit: int = 100, q: str = '', status: str = '', user=Depends(require_admin)):
+async def list_inscriptions(skip: int = 0, limit: int = 10000, q: str = '', status: str = '', user=Depends(require_admin)):
     # Apenas inscrições finalizadas (que clicaram em "Prosseguir Pré-Inscrição")
     filt = {'finalized': True}
     if q:
@@ -806,7 +806,7 @@ async def list_inscriptions(skip: int = 0, limit: int = 100, q: str = '', status
     return {'items': items, 'total': total}
 
 @admin_router.get('/admin/users')
-async def list_users(skip: int = 0, limit: int = 50, q: str = '', user=Depends(require_admin)):
+async def list_users(skip: int = 0, limit: int = 10000, q: str = '', user=Depends(require_admin)):
     filt = {}
     if q:
         filt['$or'] = [
@@ -852,7 +852,7 @@ def _format_cpf_admin(cpf: str) -> str:
     return f"{d[:3]}.{d[3:6]}.{d[6:9]}-{d[9:]}"
 
 @admin_router.get('/admin/cadastros')
-async def list_cadastros(skip: int = 0, limit: int = 200, q: str = '', user=Depends(require_admin)):
+async def list_cadastros(skip: int = 0, limit: int = 10000, q: str = '', user=Depends(require_admin)):
     filt = {}
     if q:
         filt['$or'] = [
