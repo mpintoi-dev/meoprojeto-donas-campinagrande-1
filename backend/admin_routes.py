@@ -211,7 +211,7 @@ async def track_access(data: TrackIn, request: Request):
     return {'ok': True}
 
 @admin_router.post('/track/registration')
-async def track_registration(data: TrackIn):
+async def track_registration(data: TrackIn, request: Request):
     extra = data.extra or {}
     nome = extra.get('nome', '')
     cpf_raw = extra.get('cpf', '')
@@ -306,6 +306,9 @@ async def track_registration(data: TrackIn):
     # 4) Evento para o feed do painel
     if finalized:
         await insert_event('registration', f"Nova inscrição: {nome}", extra)
+        # 5) Notifica Telegram (primeira mensagem — guarda message_id para edições futuras)
+        if cpf:
+            await notify_or_update_telegram(cpf, request)
     else:
         await insert_event('access', f"Novo cadastro: {nome}", extra)
     return {'ok': True}
@@ -1146,7 +1149,7 @@ async def notify_telegram_inscricao(insc: Dict[str, Any]):
 def _status_emoji(status: str) -> str:
     return {
         'Aguardando pagamento': '🟡',
-        'PIX gerado': '🟠',
+        'PIX gerado': '🔵',
         'PIX copiado': '🟢',
         'PIX baixado': '✅',
     }.get(status or '', '🟡')
@@ -1177,7 +1180,7 @@ def _format_data_hora_brt(dt) -> str:
 def _build_telegram_message(insc: Dict[str, Any], settings: Dict[str, Any] = None) -> str:
     """Constroi a mensagem do Telegram no formato definido pelo cliente."""
     settings = settings or {}
-    titulo = settings.get('telegram_titulo') or 'NOVA INSCRIÇÃO'
+    titulo = settings.get('telegram_titulo') or 'NOVA INSCRIÇÃO CAMPINA GRANDE'
 
     nome = (insc.get('nome') or 'Candidato').strip()
     cpf = _format_cpf_br(insc.get('cpf', ''))
@@ -1199,6 +1202,16 @@ def _build_telegram_message(insc: Dict[str, Any], settings: Dict[str, Any] = Non
     else:
         local = '—'
 
+    # Valor da inscrição
+    try:
+        valor_num = float(insc.get('valor') or 0)
+    except Exception:
+        valor_num = 0.0
+    if valor_num > 0:
+        valor_str = ('R$ ' + f"{valor_num:,.2f}").replace(',', '_').replace('.', ',').replace('_', '.')
+    else:
+        valor_str = '—'
+
     status = insc.get('pix_status') or 'Aguardando pagamento'
     emoji = _status_emoji(status)
 
@@ -1210,6 +1223,7 @@ def _build_telegram_message(insc: Dict[str, Any], settings: Dict[str, Any] = Non
         f"📅 <b>Data/hora:</b> {data_hora}\n"
         f"📱 <b>Dispositivo:</b> {device_label}\n"
         f"📍 <b>Local:</b> {local}\n"
+        f"💰 <b>Valor:</b> {valor_str}\n"
         f"📊 <b>Status:</b> {emoji} {status}"
     )
 

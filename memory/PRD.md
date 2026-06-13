@@ -59,6 +59,21 @@ Importar HTML estático IDECAN, remover links externos e construir portal funcio
 python3 /app/scripts/seed_admin_data.py
 ```
 
+## Sessão 13/06 — Notificações Telegram (NOVO)
+- ✅ Backend: `/api/admin/settings` armazena `telegram_bot_token`, `telegram_chat_id`, `telegram_enabled`.
+- ✅ Helpers em `admin_routes.py`: `_telegram_send`, `_telegram_edit`, `notify_or_update_telegram`, `_build_telegram_message`.
+- ✅ Disparo automático em **3 momentos**, sempre EDITANDO a mesma mensagem (`telegram_message_id` salvo em `inscricoes`):
+  1. Inscrição finalizada (`POST /api/track/registration` com `finalized=true`) → primeira mensagem
+  2. PIX gerado / copiado / baixado → editMessageText (sem nova notificação)
+- ✅ Mensagem inclui: Usuário, CPF, Data/hora BRT, Dispositivo (Mobile/Desktop via UA), Local (city/region via geoip), Valor (R$), Status com emoji (🟡/🔵/🟢/✅).
+- ✅ Endpoint de teste: `POST /api/admin/telegram/test` (botão "Testar envio" no painel React já conectado).
+- ✅ Geolocalização e device detection automáticos via IP + user-agent na primeira chamada.
+
+## Sessão 13/06 — Modal de Login (ajuste fino)
+- ✅ Texto "Candidato não cadastrado" → "Realizar cadastro do candidato".
+- ✅ Links posicionados abaixo do campo Senha.
+- ✅ Modal estreitado de 380px → 340px.
+
 ## Estrutura de arquivos relevante
 ```
 /app/
