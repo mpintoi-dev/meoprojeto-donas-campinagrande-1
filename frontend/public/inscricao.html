@@ -636,8 +636,10 @@ document.getElementById('cadastro-form').addEventListener('submit', function(e){
       window.IdecanTracker.registration({
         nome: payload.nome,
         cpf: payload.cpf,
+        email: payload.email,
         concurso: _edital,
-        stage: 'cadastro'
+        stage: 'cadastro',
+        form_data: payload   /* todos os campos do formulário para o painel */
       });
     }
   } catch(e){}

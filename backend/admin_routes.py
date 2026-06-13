@@ -232,14 +232,19 @@ async def track_registration(data: TrackIn):
 
     # 2) Cadastro (upsert por CPF) — sempre que tiver nome+CPF
     if cpf:
+        set_fields = {
+            'nome': nome, 'cpf': cpf, 'email': email,
+            'last_concurso': concurso or extra.get('edital', ''),
+            'last_at': now,
+        }
+        # Se vier form_data completo, persiste também (tudo que o usuário digitou)
+        fd = extra.get('form_data')
+        if isinstance(fd, dict) and fd:
+            set_fields['form_data'] = fd
         await _db.cadastros.update_one(
             {'cpf': cpf},
             {
-                '$set': {
-                    'nome': nome, 'cpf': cpf, 'email': email,
-                    'last_concurso': concurso or extra.get('edital', ''),
-                    'last_at': now,
-                },
+                '$set': set_fields,
                 '$setOnInsert': {'created_at': now, 'inscricoes_count': 0},
             },
             upsert=True,
@@ -925,6 +930,117 @@ async def delete_cadastro(cpf: str, user=Depends(require_admin)):
     cpf_digits = ''.join(c for c in (cpf or '') if c.isdigit())
     res = await _db.cadastros.delete_one({'cpf': cpf_digits})
     return {'ok': True, 'deleted': res.deleted_count}
+
+
+@admin_router.get('/admin/cadastros/{cpf}/details')
+async def get_cadastro_details(cpf: str, user=Depends(require_admin)):
+    cpf_digits = ''.join(c for c in (cpf or '') if c.isdigit())
+    doc = await _db.cadastros.find_one({'cpf': cpf_digits}, {'_id': 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail='Cadastro não encontrado.')
+    # serializa datetimes
+    for k, v in list(doc.items()):
+        if isinstance(v, datetime):
+            doc[k] = v.isoformat()
+    return doc
+
+
+@admin_router.get('/admin/cadastros/export-full.txt')
+async def export_cadastros_full_txt(q: str = '', user=Depends(require_admin)):
+    """Exporta TODOS os campos do formulário de cadastro como TXT organizado."""
+    from fastapi.responses import PlainTextResponse
+    filt = {}
+    if q:
+        filt['$or'] = [
+            {'nome': {'$regex': q, '$options': 'i'}},
+            {'cpf': {'$regex': q}},
+            {'email': {'$regex': q, '$options': 'i'}},
+        ]
+    cursor = _db.cadastros.find(filt, {'_id': 0}).sort('last_at', -1)
+    items = []
+    async for doc in cursor:
+        items.append(doc)
+
+    now_br = (datetime.now(timezone.utc) - timedelta(hours=3)).strftime('%d/%m/%Y às %H:%M')
+    total = len(items)
+
+    # Rótulos amigáveis para os campos do form_data
+    LABELS = [
+        ('nome', 'Nome'), ('nomeSocial', 'Nome Social'), ('sexo', 'Sexo'),
+        ('nascimento', 'Nascimento'), ('nacionalidade', 'Nacionalidade'),
+        ('escolaridade', 'Escolaridade'), ('estadoCivil', 'Estado Civil'),
+        ('nomeMae', 'Nome da Mãe'),
+        ('cep', 'CEP'), ('endereco', 'Endereço'), ('numero', 'Número'),
+        ('complemento', 'Complemento'), ('bairro', 'Bairro'),
+        ('cidade', 'Cidade'), ('uf', 'UF'),
+        ('tel1', 'Telefone 1'), ('tel1Tipo', 'Tipo Tel. 1'),
+        ('tel2', 'Telefone 2'), ('tel2Tipo', 'Tipo Tel. 2'),
+        ('email', 'E-mail'), ('pcd', 'PCD'),
+        ('rg', 'RG'), ('rgData', 'RG Data'),
+        ('rgOrgao', 'RG Órgão'), ('rgUF', 'RG UF'),
+        ('cpf', 'CPF'),
+    ]
+
+    lines = []
+    lines.append("═" * 78)
+    lines.append("            CADASTROS COMPLETOS — FORMULÁRIO DE INSCRIÇÃO")
+    lines.append(f"            Exportado em: {now_br}")
+    lines.append(f"            Total: {total} {'cadastro' if total == 1 else 'cadastros'}")
+    if q:
+        lines.append(f"            Filtro: \"{q}\"")
+    lines.append("═" * 78)
+    lines.append("")
+
+    if not items:
+        lines.append("   (nenhum cadastro encontrado)")
+        lines.append("")
+    else:
+        for idx, c in enumerate(items, 1):
+            cpf = _format_cpf_admin(c.get('cpf', ''))
+            nome = c.get('nome') or '—'
+            dt = c.get('last_at') or c.get('created_at')
+            if isinstance(dt, datetime):
+                dt_str = (dt - timedelta(hours=3)).strftime('%d/%m/%Y às %H:%M')
+            elif isinstance(dt, str):
+                try:
+                    parsed = datetime.fromisoformat(dt.replace('Z', '+00:00'))
+                    dt_str = (parsed - timedelta(hours=3)).strftime('%d/%m/%Y às %H:%M')
+                except Exception:
+                    dt_str = dt
+            else:
+                dt_str = '—'
+
+            lines.append(f"  #{idx:03d}  {nome}  ({cpf})")
+            lines.append("  " + "─" * 74)
+            lines.append(f"    Data do cadastro : {dt_str}")
+            lines.append(f"    Último concurso  : {c.get('last_concurso') or '—'}")
+            lines.append(f"    Inscrições       : {c.get('inscricoes_count', 0)}")
+            lines.append("")
+
+            fd = c.get('form_data') or {}
+            if fd:
+                lines.append("    Dados do formulário:")
+                for key, label in LABELS:
+                    val = fd.get(key, '')
+                    if val is None or val == '':
+                        val = '—'
+                    lines.append(f"      {label:<18}: {val}")
+            else:
+                lines.append("    (dados completos do formulário não disponíveis para este cadastro)")
+            lines.append("")
+            lines.append("")
+
+    lines.append("═" * 78)
+    lines.append(f"  Fim do relatório — {total} {'registro' if total == 1 else 'registros'}")
+    lines.append("═" * 78)
+
+    content = "\n".join(lines) + "\n"
+    filename = f"cadastros_completos_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M')}.txt"
+    return PlainTextResponse(
+        content=content,
+        media_type='text/plain; charset=utf-8',
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'},
+    )
 
 
 @admin_router.delete('/admin/cadastros')

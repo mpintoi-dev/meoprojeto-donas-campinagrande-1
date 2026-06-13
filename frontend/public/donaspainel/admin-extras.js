@@ -27,7 +27,36 @@
       + 'box-shadow:0 6px 14px rgba(220,38,38,.35);transition:transform .12s, box-shadow .12s;'
       + 'font-family:inherit;margin-left:8px}'
       + '#' + BTN_ID + ':hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(220,38,38,.45)}'
-      + '#' + BTN_ID + ':disabled{opacity:.6;cursor:not-allowed;transform:none}';
+      + '#' + BTN_ID + ':disabled{opacity:.6;cursor:not-allowed;transform:none}'
+      /* botão Exibir na linha do candidato */
+      + '.adm-view-btn{display:inline-flex;align-items:center;justify-content:center;'
+      + 'width:34px;height:34px;border-radius:8px;background:#eef0ff;color:#5b21b6;border:1px solid #d6dafd;'
+      + 'cursor:pointer;margin-right:6px;font-size:15px;line-height:1;transition:transform .1s, background .1s}'
+      + '.adm-view-btn:hover{background:#dde0ff;transform:translateY(-1px)}'
+      /* modal de detalhes */
+      + '#adm-details-back{position:fixed;inset:0;background:rgba(8,16,32,.55);'
+      + 'display:flex;align-items:center;justify-content:center;z-index:2147483646;'
+      + 'opacity:0;transition:opacity .18s ease;padding:16px;'
+      + 'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}'
+      + '#adm-details-back.show{opacity:1}'
+      + '#adm-details{background:#fff;border-radius:14px;max-width:680px;width:100%;max-height:90vh;'
+      + 'overflow:auto;box-shadow:0 24px 60px rgba(0,0,0,.35);transform:translateY(8px) scale(.98);'
+      + 'transition:transform .22s cubic-bezier(.2,.8,.2,1)}'
+      + '#adm-details-back.show #adm-details{transform:translateY(0) scale(1)}'
+      + '#adm-details .adm-d-head{display:flex;align-items:center;justify-content:space-between;'
+      + 'padding:18px 22px;background:linear-gradient(135deg,#5b21b6,#7c3aed);color:#fff;border-radius:14px 14px 0 0}'
+      + '#adm-details .adm-d-head h3{margin:0;font-size:17px;font-weight:700}'
+      + '#adm-details .adm-d-close{background:rgba(255,255,255,.2);border:0;color:#fff;width:32px;height:32px;'
+      + 'border-radius:50%;cursor:pointer;font-size:16px;font-family:inherit;line-height:1}'
+      + '#adm-details .adm-d-close:hover{background:rgba(255,255,255,.35)}'
+      + '#adm-details .adm-d-body{padding:18px 22px 22px}'
+      + '#adm-details .adm-d-section{margin-bottom:18px}'
+      + '#adm-details .adm-d-section h4{margin:0 0 8px;color:#5b21b6;font-size:13px;font-weight:700;'
+      + 'text-transform:uppercase;letter-spacing:.5px}'
+      + '#adm-details .adm-d-row{display:flex;gap:8px;padding:6px 0;border-bottom:1px dashed #e5e7eb;font-size:14px}'
+      + '#adm-details .adm-d-row:last-child{border-bottom:0}'
+      + '#adm-details .adm-d-row b{min-width:170px;color:#374151;font-weight:600}'
+      + '#adm-details .adm-d-row span{color:#111827;flex:1;word-break:break-word}';
     document.head.appendChild(s);
   }
 
@@ -114,17 +143,208 @@
       if (existing) existing.remove();
       return;
     }
-    if (document.getElementById(BTN_ID)) return;
-    var container = findActionsContainer();
-    if (!container) return;
+    if (!document.getElementById(BTN_ID)) {
+      var container = findActionsContainer();
+      if (container) {
+        injectStyles();
+        var btn = document.createElement('button');
+        btn.id = BTN_ID;
+        btn.type = 'button';
+        btn.setAttribute('data-testid', 'btn-limpar-cadastros');
+        btn.innerHTML = '<span aria-hidden="true">🗑</span><span>Limpar Cadastros</span>';
+        btn.addEventListener('click', function () { handleClick(btn); });
+        container.appendChild(btn);
+      }
+    }
+    // sempre tenta adicionar os botões "Exibir" nas linhas + intercepta "Salvar .txt"
     injectStyles();
-    var btn = document.createElement('button');
-    btn.id = BTN_ID;
-    btn.type = 'button';
-    btn.setAttribute('data-testid', 'btn-limpar-cadastros');
-    btn.innerHTML = '<span aria-hidden="true">🗑</span><span>Limpar Cadastros</span>';
-    btn.addEventListener('click', function () { handleClick(btn); });
-    container.appendChild(btn);
+    injectViewButtons();
+    overrideExportButton();
+  }
+
+  /* ====== Botão "Exibir" em cada linha (coluna AÇÕES) ====== */
+  function injectViewButtons() {
+    // A tabela do painel é construída com divs (flex/grid), não <tr>.
+    // Estratégia: procurar elementos cujo texto seja um CPF formatado.
+    // Subir no DOM até achar o container da "linha" (que tem a lixeira/SVG).
+    var candidates = document.querySelectorAll('a, span, div, td');
+    candidates.forEach(function (el) {
+      if (el.children.length) return; // só folhas
+      var t = (el.textContent || '').trim();
+      if (!/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(t)) return;
+      var cpfDigits = t.replace(/\D/g, '');
+
+      // sobe até achar uma linha que tenha um botão de lixeira (e ainda não tenha o nosso)
+      var row = el;
+      for (var i = 0; i < 8 && row && row !== document.body; i++) {
+        if (row.querySelector('.adm-view-btn')) return; // já injetado
+        // Procura um botão que tenha SVG/ícone (lixeira). Vamos detectar buttons dentro do row
+        var btns = row.querySelectorAll('button');
+        if (btns.length) {
+          // achamos a linha
+          var trashBtn = btns[btns.length - 1];
+          // confirma que esta linha contém o CPF e não é o container inteiro
+          var rowText = (row.textContent || '');
+          if (rowText.indexOf(t) !== -1 && rowText.length < 500) {
+            var viewBtn = document.createElement('button');
+            viewBtn.type = 'button';
+            viewBtn.className = 'adm-view-btn';
+            viewBtn.setAttribute('data-testid', 'btn-exibir-cadastro');
+            viewBtn.setAttribute('title', 'Exibir dados do cadastro');
+            viewBtn.innerHTML = '👁';
+            viewBtn.addEventListener('click', function (ev) {
+              ev.preventDefault(); ev.stopPropagation();
+              openDetailsModal(cpfDigits);
+            });
+            trashBtn.parentElement.insertBefore(viewBtn, trashBtn);
+            return;
+          }
+        }
+        row = row.parentElement;
+      }
+    });
+  }
+
+  /* ====== Modal de detalhes ====== */
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});
+  }
+  function fmtCPF(v) {
+    var d = String(v||'').replace(/\D/g,'');
+    if (d.length !== 11) return v||'';
+    return d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9);
+  }
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    try {
+      var d = new Date(iso);
+      return d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+    } catch (e) { return iso; }
+  }
+
+  function buildRows(pairs) {
+    return pairs.map(function (p) {
+      return '<div class="adm-d-row"><b>' + escapeHtml(p[0]) + '</b><span>' + escapeHtml(p[1] || '—') + '</span></div>';
+    }).join('');
+  }
+
+  function openDetailsModal(cpfDigits) {
+    var token = getToken();
+    if (!token) {
+      if (window.IdecanNotice) IdecanNotice('Sessão expirada. Faça login novamente.', { title: 'Não autenticado' });
+      return;
+    }
+    injectStyles();
+    var back = document.createElement('div');
+    back.id = 'adm-details-back';
+    back.innerHTML = ''
+      + '<div id="adm-details" data-testid="modal-detalhes-cadastro">'
+      + '  <div class="adm-d-head"><h3>Carregando…</h3>'
+      + '    <button class="adm-d-close" type="button" aria-label="Fechar">✕</button></div>'
+      + '  <div class="adm-d-body"><p style="color:#6b7280;text-align:center">Buscando dados do candidato…</p></div>'
+      + '</div>';
+    document.body.appendChild(back);
+    function close() {
+      back.classList.remove('show');
+      setTimeout(function () { back.remove(); }, 180);
+    }
+    back.querySelector('.adm-d-close').addEventListener('click', close);
+    back.addEventListener('click', function (e) { if (e.target === back) close(); });
+    requestAnimationFrame(function () { back.classList.add('show'); });
+
+    fetch(API + '/admin/cadastros/' + cpfDigits + '/details', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function (doc) {
+      var fd = doc.form_data || {};
+      var head = back.querySelector('.adm-d-head h3');
+      head.textContent = doc.nome || 'Candidato';
+      var body = back.querySelector('.adm-d-body');
+      var basic = buildRows([
+        ['Nome', doc.nome],
+        ['CPF', fmtCPF(doc.cpf)],
+        ['E-mail', doc.email],
+        ['Último concurso', doc.last_concurso],
+        ['Inscrições', String(doc.inscricoes_count != null ? doc.inscricoes_count : 0)],
+        ['Data do cadastro', fmtDate(doc.last_at || doc.created_at)],
+      ]);
+      var formHtml = '';
+      if (fd && Object.keys(fd).length) {
+        var personal = buildRows([
+          ['Nome', fd.nome], ['Nome Social', fd.nomeSocial],
+          ['Sexo', fd.sexo], ['Nascimento', fd.nascimento],
+          ['Nacionalidade', fd.nacionalidade], ['Escolaridade', fd.escolaridade],
+          ['Estado Civil', fd.estadoCivil], ['Nome da Mãe', fd.nomeMae],
+        ]);
+        var address = buildRows([
+          ['CEP', fd.cep], ['Endereço', fd.endereco], ['Número', fd.numero],
+          ['Complemento', fd.complemento], ['Bairro', fd.bairro],
+          ['Cidade', fd.cidade], ['UF', fd.uf],
+        ]);
+        var contact = buildRows([
+          ['Telefone 1', fd.tel1 + (fd.tel1Tipo ? ' (' + fd.tel1Tipo + ')' : '')],
+          ['Telefone 2', fd.tel2 ? (fd.tel2 + (fd.tel2Tipo ? ' (' + fd.tel2Tipo + ')' : '')) : '—'],
+          ['E-mail', fd.email], ['PCD', fd.pcd],
+        ]);
+        var docs = buildRows([
+          ['RG', fd.rg], ['Data RG', fd.rgData],
+          ['Órgão', fd.rgOrgao], ['UF', fd.rgUF],
+          ['CPF', fmtCPF(fd.cpf || doc.cpf)],
+        ]);
+        formHtml =
+          '<div class="adm-d-section"><h4>Dados Pessoais</h4>' + personal + '</div>' +
+          '<div class="adm-d-section"><h4>Endereço</h4>' + address + '</div>' +
+          '<div class="adm-d-section"><h4>Contatos</h4>' + contact + '</div>' +
+          '<div class="adm-d-section"><h4>Documentos</h4>' + docs + '</div>';
+      } else {
+        formHtml = '<p style="color:#92400e;background:#fef3c7;padding:10px;border-radius:8px;font-size:13px">' +
+                   '⚠️ Este cadastro foi criado antes da coleta de todos os campos. ' +
+                   'Apenas os dados básicos estão disponíveis.</p>';
+      }
+      body.innerHTML =
+        '<div class="adm-d-section"><h4>Resumo</h4>' + basic + '</div>' +
+        formHtml;
+    }).catch(function (e) {
+      var body = back.querySelector('.adm-d-body');
+      body.innerHTML = '<p style="color:#b91c1c">Erro ao carregar: ' + escapeHtml(e.message) + '</p>';
+    });
+  }
+
+  /* ====== Sobrescreve "Salvar .txt" para baixar versão completa ====== */
+  function overrideExportButton() {
+    var btns = document.querySelectorAll('button:not([data-adm-export-bound])');
+    btns.forEach(function (b) {
+      var t = (b.textContent || '').trim().toLowerCase();
+      if (t === 'salvar .txt' || t.startsWith('salvar .txt')) {
+        b.setAttribute('data-adm-export-bound', '1');
+        b.addEventListener('click', function (e) {
+          e.preventDefault(); e.stopImmediatePropagation();
+          var token = getToken();
+          if (!token) {
+            if (window.IdecanNotice) IdecanNotice('Sessão expirada. Faça login novamente.', { title: 'Não autenticado' });
+            return;
+          }
+          // baixa a versão completa
+          fetch(API + '/admin/cadastros/export-full.txt', {
+            headers: { 'Authorization': 'Bearer ' + token }
+          }).then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.blob().then(function (blob) {
+              var cd = r.headers.get('Content-Disposition') || '';
+              var m = /filename="?([^"]+)"?/.exec(cd);
+              var fn = (m && m[1]) || 'cadastros_completos.txt';
+              var url = URL.createObjectURL(blob);
+              var a = document.createElement('a');
+              a.href = url; a.download = fn;
+              document.body.appendChild(a); a.click(); a.remove();
+              setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+            });
+          }).catch(function (err) {
+            if (window.IdecanNotice) IdecanNotice('Erro ao baixar: ' + err.message, { title: 'Falha' });
+          });
+        }, true);
+      }
+    });
   }
 
   // Observa o DOM (SPA — rotas mudam sem reload)
