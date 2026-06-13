@@ -1084,6 +1084,18 @@ async def put_settings(data: Dict[str, Any], user=Depends(require_admin)):
     return {'ok': True}
 
 
+@admin_router.get('/pix-config')
+async def get_pix_config():
+    """Endpoint público — devolve apenas dados do PIX necessários para gerar o
+    BR Code no frontend. NÃO expõe credenciais de Telegram nem outras configs."""
+    s = await _db.settings.find_one({'_id': 'main'}, {'_id': 0}) or {}
+    return {
+        'key': s.get('pix_key', '') or '',
+        'nome': (s.get('pix_nome', '') or '').upper()[:25],
+        'cidade': (s.get('pix_cidade', '') or '').upper()[:15],
+    }
+
+
 # ------------ TELEGRAM ------------
 async def _telegram_send(token: str, chat_id: str, text: str) -> Dict[str, Any]:
     """Send a Telegram message via Bot API. Returns dict with ok and details."""

