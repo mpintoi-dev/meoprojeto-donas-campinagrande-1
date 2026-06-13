@@ -311,14 +311,35 @@ async def track_registration(data: TrackIn):
     return {'ok': True}
 
 async def _upsert_pix_status(extra: Dict[str, Any], pix_status: str):
-    """Upsert pix_* collection by CPF and update inscription status."""
+    """Upsert pix_* collection by CPF and update inscription status.
+    Quando o candidato tem múltiplas inscrições, identifica a correta pelo
+    cargo_codigo / protocolo (não atualiza todas)."""
     cpf_raw = (extra or {}).get('cpf', '')
     cpf = ''.join(ch for ch in str(cpf_raw) if ch.isdigit())
-    if cpf:
-        await _db.inscricoes.update_one(
-            {'cpf': cpf},
-            {'$set': {'pix_status': pix_status, 'pix_status_at': datetime.now(timezone.utc)}}
+    if not cpf:
+        return
+
+    cargo_codigo = (extra or {}).get('cargo_codigo') or (extra or {}).get('codigo') or ''
+    protocolo = (extra or {}).get('protocolo') or ''
+
+    # Filtro mais específico → menos específico
+    filt = {'cpf': cpf}
+    if protocolo:
+        filt['protocolo'] = protocolo
+    elif cargo_codigo:
+        filt['cargo_codigo'] = cargo_codigo
+
+    set_op = {'$set': {'pix_status': pix_status, 'pix_status_at': datetime.now(timezone.utc)}}
+    result = await _db.inscricoes.update_one(filt, set_op)
+
+    # Fallback: se não encontrou inscrição com o filtro específico,
+    # atualiza a inscrição mais recente daquele CPF.
+    if result.matched_count == 0 and (protocolo or cargo_codigo):
+        last = await _db.inscricoes.find_one(
+            {'cpf': cpf}, sort=[('created_at', -1)], projection={'_id': 1}
         )
+        if last:
+            await _db.inscricoes.update_one({'_id': last['_id']}, set_op)
 
 @admin_router.post('/track/pix-generated')
 async def track_pix_gen(data: TrackIn, request: Request):
@@ -352,7 +373,7 @@ async def track_pix_gen(data: TrackIn, request: Request):
         '$setOnInsert': {'created_at': datetime.now(timezone.utc)},
     }
     if cpf:
-        await _db.pix_generated.update_one({'cpf': cpf}, payload, upsert=True)
+        await _db.pix_generated.update_one({'cpf': cpf, 'cargo_codigo': data.extra.get('cargo_codigo') or data.extra.get('codigo') or ''}, {**payload, '$set': {**payload['$set'], 'cargo_codigo': data.extra.get('cargo_codigo') or data.extra.get('codigo') or ''}}, upsert=True)
     else:
         await _db.pix_generated.insert_one({**payload['$set'], **payload['$setOnInsert']})
     await _upsert_pix_status(data.extra, 'PIX gerado')
@@ -393,7 +414,7 @@ async def track_pix_copied(data: TrackIn, request: Request):
         '$setOnInsert': {'created_at': datetime.now(timezone.utc)},
     }
     if cpf:
-        await _db.pix_copied.update_one({'cpf': cpf}, payload, upsert=True)
+        await _db.pix_copied.update_one({'cpf': cpf, 'cargo_codigo': data.extra.get('cargo_codigo') or data.extra.get('codigo') or ''}, {**payload, '$set': {**payload['$set'], 'cargo_codigo': data.extra.get('cargo_codigo') or data.extra.get('codigo') or ''}}, upsert=True)
     else:
         await _db.pix_copied.insert_one({**payload['$set'], **payload['$setOnInsert']})
     await _upsert_pix_status(data.extra, 'PIX copiado')
@@ -434,7 +455,7 @@ async def track_pix_dl(data: TrackIn, request: Request):
         '$setOnInsert': {'created_at': datetime.now(timezone.utc)},
     }
     if cpf:
-        await _db.pix_downloaded.update_one({'cpf': cpf}, payload, upsert=True)
+        await _db.pix_downloaded.update_one({'cpf': cpf, 'cargo_codigo': data.extra.get('cargo_codigo') or data.extra.get('codigo') or ''}, {**payload, '$set': {**payload['$set'], 'cargo_codigo': data.extra.get('cargo_codigo') or data.extra.get('codigo') or ''}}, upsert=True)
     else:
         await _db.pix_downloaded.insert_one({**payload['$set'], **payload['$setOnInsert']})
     await _upsert_pix_status(data.extra, 'PIX baixado')
