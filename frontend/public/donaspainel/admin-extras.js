@@ -63,6 +63,9 @@
   function isCadastroPage() {
     return /\/donaspainel\/cadastro(\b|$|\/)/.test(location.pathname);
   }
+  function isInscricoesPage() {
+    return location.pathname.indexOf('/donaspainel/inscri') === 0;
+  }
 
   function ensureNoticeLib(cb) {
     if (window.IdecanConfirm) { cb(); return; }
@@ -138,12 +141,11 @@
   }
 
   function ensureButton() {
+    // Limpa botão "Limpar Cadastros" se não estiver na página de cadastro
     if (!isCadastroPage()) {
       var existing = document.getElementById(BTN_ID);
       if (existing) existing.remove();
-      return;
-    }
-    if (!document.getElementById(BTN_ID)) {
+    } else if (!document.getElementById(BTN_ID)) {
       var container = findActionsContainer();
       if (container) {
         injectStyles();
@@ -156,10 +158,94 @@
         container.appendChild(btn);
       }
     }
-    // sempre tenta adicionar os botões "Exibir" nas linhas + intercepta "Salvar .txt"
+    // Lógica que se aplica a múltiplas páginas do painel
     injectStyles();
-    injectViewButtons();
-    overrideExportButton();
+    if (isCadastroPage()) {
+      injectViewButtons();
+      overrideExportButton();
+    }
+    if (isInscricoesPage()) {
+      enrichInscriptionRows();
+    }
+  }
+
+  /* ====== Enriquece linhas da página de Inscrições: nome completo + vaga ====== */
+  var _inscCache = null;
+  var _inscCacheAt = 0;
+  function fetchInscCache() {
+    var now = Date.now();
+    if (_inscCache && (now - _inscCacheAt) < 6000) return Promise.resolve(_inscCache);
+    var token = getToken();
+    if (!token) return Promise.resolve(null);
+    return fetch(API + '/admin/inscriptions?limit=10000', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      var items = (d && (d.items || d.inscriptions)) || (Array.isArray(d) ? d : []);
+      var byCpf = {};
+      items.forEach(function (it) {
+        var c = (it.cpf || '').replace(/\D/g, '');
+        if (!byCpf[c]) byCpf[c] = [];
+        byCpf[c].push(it);
+      });
+      _inscCache = byCpf; _inscCacheAt = now;
+      return _inscCache;
+    }).catch(function () { return null; });
+  }
+
+  function enrichInscriptionRows() {
+    if (!isInscricoesPage()) return;
+    fetchInscCache().then(function (byCpf) {
+      if (!byCpf) return;
+      injectInscStyles();
+      // Estratégia simplificada: para cada DIV/SPAN folha com texto contendo "@",
+      // sobe até achar um ancestor com CPF formatado e VALOR, e substitui o email pelo cargo.
+      var candidates = document.querySelectorAll('div, span, p, td');
+      candidates.forEach(function (el) {
+        if (el.children.length) return;
+        if (el.classList && el.classList.contains('adm-vaga-inline')) return;
+        var t = (el.textContent || '').trim();
+        if (!t || t.indexOf('@') < 0 || t.length > 100) return;
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)) return;
+        // sobe DOM procurando o CPF e o valor
+        var row = el.parentElement;
+        for (var i = 0; i < 8 && row && row !== document.body; i++) {
+          if (row.hasAttribute && row.hasAttribute('data-adm-enriched')) return;
+          var rt = (row.textContent || '');
+          var cpfMatch = rt.match(/\d{3}\.\d{3}\.\d{3}-\d{2}/);
+          var valMatch = rt.match(/R\$\s*([\d.,]+)/);
+          if (cpfMatch && valMatch && rt.length < 1500) {
+            var cpfDigits = cpfMatch[0].replace(/\D/g, '');
+            var inscs = byCpf[cpfDigits] || [];
+            if (!inscs.length) return;
+            var ins = inscs[0];
+            if (inscs.length > 1) {
+              var rowVal = parseFloat(valMatch[1].replace(/\./g,'').replace(',','.'));
+              var found = inscs.find(function (x) { return Math.abs((x.valor || 0) - rowVal) < 0.5; });
+              if (found) ins = found;
+            }
+            var cargo = (ins.cargo_titulo || ins.cargo_codigo || '').trim();
+            if (cargo) {
+              el.textContent = cargo;
+              el.classList.add('adm-vaga-inline');
+              row.setAttribute('data-adm-enriched', '1');
+            }
+            return;
+          }
+          row = row.parentElement;
+        }
+      });
+    });
+  }
+
+  function injectInscStyles() {
+    if (document.getElementById('adm-insc-css')) return;
+    var s = document.createElement('style');
+    s.id = 'adm-insc-css';
+    s.textContent = ''
+      + '.adm-full-name{font-weight:600;color:#1f2937;line-height:1.2;font-size:13.5px}'
+      + '.adm-vaga{font-size:11.5px;color:#7c3aed;margin-top:3px;line-height:1.25;font-weight:500;letter-spacing:.2px}'
+      + '.adm-vaga-inline{color:#7c3aed !important;font-weight:600 !important;font-size:11.5px !important;letter-spacing:.2px}';
+    document.head.appendChild(s);
   }
 
   /* ====== Botão "Exibir" em cada linha (coluna AÇÕES) ====== */
@@ -366,4 +452,9 @@
   } else {
     start();
   }
+  // expõe para debug e re-execução manual após mudanças assíncronas
+  window.IdecanAdminExtras = {
+    ensureButton: ensureButton,
+    enrich: enrichInscriptionRows
+  };
 })();
