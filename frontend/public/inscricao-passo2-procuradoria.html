@@ -29,7 +29,7 @@
  
  <div id=SuperiorDadosCandidato align=right>
  <span class=txt3>
- <b>MATEUS VINICIOS CASTIGLIONI ALVES ESCARAVELLI</b>
+ <b><span data-candidate-name></span></b>
  </span>
  <br>
  <span class=txt2>
@@ -516,26 +516,23 @@
   }
 
   function setHeader() {
-    // Procura pelo bloco "Candidato" no cabeçalho e injeta nome/CPF reais
-    try {
-      // Spans típicos do template ASP — substitui qualquer "JEAN PAULO OLIVEIRA BOMFIM" e CPF fake
-      var html = document.body.innerHTML;
-      // não vou alterar via innerHTML (perde event listeners) — uso replace nas labels específicas
-    } catch (e) {}
-    // Estratégia simples: pega qualquer span com textContent que pareça nome em caixa alta
+    var nameUpper = (CAD.nome || '').toUpperCase();
+    var cpfFmt = fmtCPF(CAD.cpf);
+    // Preferência: spans com data-attributes (sem flash)
+    var nameSpans = document.querySelectorAll('[data-candidate-name]');
+    var cpfSpans  = document.querySelectorAll('[data-candidate-cpf]');
+    nameSpans.forEach(function (el) { el.textContent = nameUpper; });
+    cpfSpans.forEach(function (el) { el.textContent = cpfFmt; });
+    if (nameSpans.length) return;
+    // Fallback (HTML antigo com nome hardcoded)
     document.querySelectorAll('span, b, strong, td').forEach(function (el) {
       if (!el.children.length) {
         var t = (el.textContent || '').trim();
         if (/^[A-ZÁÉÍÓÚÂÊÔÃÕÇ ]{8,}$/.test(t) && t.indexOf('IDECAN') === -1 && t.indexOf('EDITAL') === -1 && t.indexOf('CAMPINA') === -1 && t.indexOf('PROCURADOR') === -1 && t.indexOf('CARGO') === -1) {
-          // provável nome do candidato — substitui
-          el.textContent = (CAD.nome || '').toUpperCase();
+          el.textContent = nameUpper;
         }
-        if (/^CPF:\s*\d{3}\.\d{3}\.\d{3}-\d{2}/.test(t)) {
-          el.textContent = 'CPF: ' + fmtCPF(CAD.cpf);
-        }
-        if (/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(t)) {
-          el.textContent = fmtCPF(CAD.cpf);
-        }
+        if (/^CPF:\s*\d{3}\.\d{3}\.\d{3}-\d{2}/.test(t)) { el.textContent = 'CPF: ' + cpfFmt; }
+        if (/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(t)) { el.textContent = cpfFmt; }
       }
     });
   }

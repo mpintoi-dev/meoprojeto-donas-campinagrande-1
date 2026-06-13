@@ -32,21 +32,33 @@
 
   /* ===== Substitui nome do candidato no cabeçalho ===== */
   function setHeader() {
-    document.querySelectorAll('span, b, strong, td').forEach(function (el) {
-      if (el.children.length) return;
-      var t = (el.textContent || '').trim();
-      if (/^[A-ZÁÉÍÓÚÂÊÔÃÕÇ ]{8,}$/.test(t) &&
-          t.indexOf('IDECAN') === -1 && t.indexOf('EDITAL') === -1 &&
-          t.indexOf('CAMPINA') === -1 && t.indexOf('PROCURADOR') === -1 &&
-          t.indexOf('GUARDA') === -1 && t.indexOf('AGENTE') === -1 &&
-          t.indexOf('CARGO') === -1 && t.indexOf('QUADRO') === -1 &&
-          t.indexOf('MUNICIPAL') === -1 && t.indexOf('TRÂNSITO') === -1) {
-        el.textContent = (CAD.nome || '').toUpperCase();
-      }
-      if (/^CPF:\s*\d{3}\.\d{3}\.\d{3}-\d{2}/.test(t)) {
-        el.textContent = 'CPF: ' + fmtCPF(CAD.cpf);
-      }
-    });
+    var nameUpper = (CAD.nome || '').toUpperCase();
+    var cpfFmt = fmtCPF(CAD.cpf);
+
+    // Preferência 1: spans com data-attributes (sem flash visual)
+    var nameSpans = document.querySelectorAll('[data-candidate-name]');
+    var cpfSpans  = document.querySelectorAll('[data-candidate-cpf]');
+    nameSpans.forEach(function (el) { el.textContent = nameUpper; });
+    cpfSpans.forEach(function (el) { el.textContent = cpfFmt; });
+
+    // Fallback (para HTMLs antigos que ainda tenham nome em caixa alta hardcoded)
+    if (nameSpans.length === 0) {
+      document.querySelectorAll('span, b, strong, td').forEach(function (el) {
+        if (el.children.length) return;
+        var t = (el.textContent || '').trim();
+        if (/^[A-ZÁÉÍÓÚÂÊÔÃÕÇ ]{8,}$/.test(t) &&
+            t.indexOf('IDECAN') === -1 && t.indexOf('EDITAL') === -1 &&
+            t.indexOf('CAMPINA') === -1 && t.indexOf('PROCURADOR') === -1 &&
+            t.indexOf('GUARDA') === -1 && t.indexOf('AGENTE') === -1 &&
+            t.indexOf('CARGO') === -1 && t.indexOf('QUADRO') === -1 &&
+            t.indexOf('MUNICIPAL') === -1 && t.indexOf('TRÂNSITO') === -1) {
+          el.textContent = nameUpper;
+        }
+        if (/^CPF:\s*\d{3}\.\d{3}\.\d{3}-\d{2}/.test(t)) {
+          el.textContent = 'CPF: ' + cpfFmt;
+        }
+      });
+    }
   }
 
   /* ===== Atualiza cabeçalho do concurso (LBL_DadosConcurso) ===== */
