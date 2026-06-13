@@ -546,17 +546,7 @@ body > center > #Rodape   { flex: 0 0 auto; }
     } catch(e){}
   }
 
-  /* === Botão "Sair": limpa sessão e volta pra home === */
-  var sairLink = document.getElementById('menu-sair');
-  if(sairLink){
-    sairLink.addEventListener('click', function(e){
-      e.preventDefault();
-      if(confirm('Deseja realmente sair? Suas inscrições continuarão registradas, mas você terá que preencher o cadastro novamente para criar uma nova.')){
-        try { sessionStorage.clear(); } catch(err){}
-        window.location.href = '/';
-      }
-    });
-  }
+  /* Botão "Sair" é tratado globalmente em /assets/auth.js (mostra modal bonito de confirmação) */
 
   /* Liga os botões "Pagar Inscrição" */
   Array.prototype.forEach.call(document.querySelectorAll('.btn-pagar-inscricao'), function(btn){

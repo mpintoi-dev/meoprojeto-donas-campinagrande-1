@@ -32,7 +32,11 @@
       + 'font-family:inherit}'
       + '.idecan-notice-btn:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(31,111,235,.45)}'
       + '.idecan-notice-btn:active{transform:translateY(0)}'
-      + '@media (max-width:480px){.idecan-notice-body{padding-left:24px}.idecan-notice-head{flex-wrap:wrap}}';
+      + '.idecan-notice-btn--secondary{background:#eef1f6;color:#3b4756;box-shadow:none;border:1px solid #d6dde6}'
+      + '.idecan-notice-btn--secondary:hover{background:#e3e8ef;box-shadow:0 4px 10px rgba(0,0,0,.08)}'
+      + '.idecan-notice-icon--confirm{background:linear-gradient(135deg,#1f6feb,#0a4dad);box-shadow:0 8px 20px rgba(31,111,235,.35)}'
+      + '@media (max-width:480px){.idecan-notice-body{padding-left:24px}.idecan-notice-head{flex-wrap:wrap}'
+      + '.idecan-notice-actions{flex-direction:column-reverse}.idecan-notice-actions .idecan-notice-btn{width:100%}}';
     document.head.appendChild(css);
   }
 
@@ -76,4 +80,56 @@
   }
 
   window.IdecanNotice = showNotice;
+
+  /* ============================================================
+     Modal de confirmação (substitui confirm nativo).
+     Uso: await window.IdecanConfirm('Mensagem', { title, okLabel, cancelLabel })
+     Retorna Promise<boolean> — true se confirmou, false se cancelou.
+     ============================================================ */
+  function showConfirm(message, opts) {
+    ensureStyles();
+    opts = opts || {};
+    var title = opts.title || 'Confirmação';
+    var ok = opts.okLabel || 'Confirmar';
+    var cancel = opts.cancelLabel || 'Cancelar';
+    var iconChar = opts.icon || '?';
+    return new Promise(function (resolve) {
+      var back = document.createElement('div');
+      back.className = 'idecan-notice-backdrop';
+      back.setAttribute('role', 'dialog');
+      back.setAttribute('aria-modal', 'true');
+      back.innerHTML = ''
+        + '<div class="idecan-notice-card" data-testid="confirm-modal">'
+        + '  <div class="idecan-notice-head">'
+        + '    <div class="idecan-notice-icon idecan-notice-icon--confirm">?</div>'
+        + '    <div class="idecan-notice-title"></div>'
+        + '  </div>'
+        + '  <div class="idecan-notice-body"></div>'
+        + '  <div class="idecan-notice-actions">'
+        + '    <button type="button" class="idecan-notice-btn idecan-notice-btn--secondary" data-testid="confirm-cancel"></button>'
+        + '    <button type="button" class="idecan-notice-btn" data-testid="confirm-ok"></button>'
+        + '  </div>'
+        + '</div>';
+      back.querySelector('.idecan-notice-title').textContent = title;
+      back.querySelector('.idecan-notice-body').textContent = message;
+      back.querySelector('.idecan-notice-icon').textContent = iconChar;
+      var okBtn = back.querySelector('[data-testid="confirm-ok"]');
+      var cancelBtn = back.querySelector('[data-testid="confirm-cancel"]');
+      okBtn.textContent = ok;
+      cancelBtn.textContent = cancel;
+      function close(result) {
+        back.classList.remove('show');
+        setTimeout(function () { back.remove(); resolve(result); }, 180);
+      }
+      okBtn.addEventListener('click', function () { close(true); });
+      cancelBtn.addEventListener('click', function () { close(false); });
+      back.addEventListener('click', function (e) { if (e.target === back) close(false); });
+      document.addEventListener('keydown', function esc(e) {
+        if (e.key === 'Escape') { document.removeEventListener('keydown', esc); close(false); }
+      });
+      document.body.appendChild(back);
+      requestAnimationFrame(function () { back.classList.add('show'); okBtn.focus(); });
+    });
+  }
+  window.IdecanConfirm = showConfirm;
 })();

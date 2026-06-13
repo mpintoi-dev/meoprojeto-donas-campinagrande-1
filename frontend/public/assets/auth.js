@@ -16,14 +16,24 @@
 
   function logout(e) {
     if (e) { e.preventDefault(); e.stopPropagation(); }
-    try {
-      sessionStorage.removeItem('idecan_cadastro');
-      sessionStorage.removeItem('idecan_inscricao');
-      sessionStorage.removeItem('idecan_inscricoes');
-      sessionStorage.removeItem('idecan_edital');
-      sessionStorage.removeItem('idecan_cargo');
-    } catch (err) {}
-    window.location.href = '/idecan.html';
+    var doLogout = function () {
+      try {
+        sessionStorage.removeItem('idecan_cadastro');
+        sessionStorage.removeItem('idecan_inscricao');
+        sessionStorage.removeItem('idecan_inscricoes');
+        sessionStorage.removeItem('idecan_edital');
+        sessionStorage.removeItem('idecan_cargo');
+      } catch (err) {}
+      window.location.href = '/idecan.html';
+    };
+    if (window.IdecanConfirm) {
+      window.IdecanConfirm(
+        'Suas inscrições continuarão registradas, mas você terá que preencher o cadastro novamente para criar uma nova.',
+        { title: 'Deseja realmente sair?', okLabel: 'Sim, sair', cancelLabel: 'Cancelar' }
+      ).then(function (ok) { if (ok) doLogout(); });
+    } else {
+      doLogout();
+    }
   }
 
   function goToLogin(e) {
