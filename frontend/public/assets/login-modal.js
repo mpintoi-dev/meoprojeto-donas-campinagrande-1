@@ -153,8 +153,8 @@
     });
     recoverLink.addEventListener('click', function (e) {
       e.preventDefault();
-      if (window.IdecanNotice) window.IdecanNotice('Para recuperar a senha, entre em contato com o suporte: atendimento@idecan.org.br', { title: 'Recuperar senha' });
-      else alert('Para recuperar a senha, entre em contato com o suporte.');
+      if (window.IdecanNotice) window.IdecanNotice('Para recuperar a senha, entre em contato com o suporte: atendimento@idecan.org.br ou refaça seu cadastro novamente.', { title: 'Recuperar senha' });
+      else alert('Para recuperar a senha, entre em contato com o suporte: atendimento@idecan.org.br ou refaça seu cadastro novamente.');
     });
 
     form.addEventListener('submit', async function (e) {
