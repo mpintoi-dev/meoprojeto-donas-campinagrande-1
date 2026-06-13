@@ -40,6 +40,12 @@
 
   var IdecanTracker = {
     access: function () {
+      // Registra acesso APENAS na primeira página visitada da sessão.
+      // Subsequentes navegações dentro do site não geram novos eventos.
+      try {
+        if (sessionStorage.getItem('idecan_access_logged') === '1') return;
+        sessionStorage.setItem('idecan_access_logged', '1');
+      } catch (e) {}
       send('/track/access', basicMeta());
     },
     registration: function (extra) {
