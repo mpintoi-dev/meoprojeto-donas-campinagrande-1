@@ -130,6 +130,14 @@ CONCURSOS = [
             ("COD 04300", "AGENTE DE TRÂNSITO", "30H", "STTP", 150.0),
         ],
     },
+    {
+        "key": "procuradoria",
+        "nome": "Concurso Público IDECAN - Procurador Municipal",
+        "edital": "procuradoria",
+        "cargos": [
+            ("COD 05100", "PROCURADOR MUNICIPAL", "40H", "PGM", 200.0),
+        ],
+    },
 ]
 
 
@@ -171,16 +179,16 @@ def main():
     inscricoes_doc = []
     eventos = []
 
-    # Distribuição de status (60 inscrições):
+    # Distribuição de status (80 inscrições — 20 por concurso × 4):
     # - 30% só inscritos (aguardando pagamento)
     # - 25% geraram PIX
     # - 25% copiaram PIX
     # - 20% baixaram comprovante
     status_pool = (
-        ["aguardando"] * 18 +
-        ["pix_gerado"] * 15 +
-        ["pix_copiado"] * 15 +
-        ["pix_baixado"] * 12
+        ["aguardando"] * 24 +
+        ["pix_gerado"] * 20 +
+        ["pix_copiado"] * 20 +
+        ["pix_baixado"] * 16
     )
     random.shuffle(status_pool)
 
