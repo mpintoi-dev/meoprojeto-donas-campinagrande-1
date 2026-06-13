@@ -819,6 +819,13 @@ async def delete_cadastro(cpf: str, user=Depends(require_admin)):
     res = await _db.cadastros.delete_one({'cpf': cpf_digits})
     return {'ok': True, 'deleted': res.deleted_count}
 
+
+@admin_router.delete('/admin/cadastros')
+async def delete_all_cadastros(user=Depends(require_admin)):
+    """Apaga TODOS os cadastros da coleção 'cadastros' (não afeta inscrições)."""
+    res = await _db.cadastros.delete_many({})
+    return {'ok': True, 'deleted': res.deleted_count}
+
 @admin_router.get('/admin/settings')
 async def get_settings(user=Depends(require_admin)):
     s = await _db.settings.find_one({'_id': 'main'}, {'_id': 0})
