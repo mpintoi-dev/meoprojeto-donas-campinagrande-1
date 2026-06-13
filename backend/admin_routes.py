@@ -312,7 +312,8 @@ async def track_registration(data: TrackIn):
 
 async def _upsert_pix_status(extra: Dict[str, Any], pix_status: str):
     """Upsert pix_* collection by CPF and update inscription status."""
-    cpf = (extra or {}).get('cpf', '')
+    cpf_raw = (extra or {}).get('cpf', '')
+    cpf = ''.join(ch for ch in str(cpf_raw) if ch.isdigit())
     if cpf:
         await _db.inscricoes.update_one(
             {'cpf': cpf},
@@ -321,8 +322,8 @@ async def _upsert_pix_status(extra: Dict[str, Any], pix_status: str):
 
 @admin_router.post('/track/pix-generated')
 async def track_pix_gen(data: TrackIn, request: Request):
-    cpf = data.extra.get('cpf', '')
-    # Se temos CPF, busca a inscrição REAL e usa o valor verdadeiro (evita R$75 hardcoded)
+    cpf_raw = data.extra.get('cpf', '')
+    cpf = ''.join(ch for ch in str(cpf_raw) if ch.isdigit())
     real_valor = None
     real_nome = ''
     real_concurso = ''
@@ -332,7 +333,11 @@ async def track_pix_gen(data: TrackIn, request: Request):
             real_valor = insc.get('valor')
             real_nome = insc.get('nome', '')
             real_concurso = insc.get('concurso', '')
-    valor_final = float(real_valor) if real_valor not in (None, 0) else float(data.extra.get('valor', 75.0) or 75.0)
+    try:
+        fallback_valor = float(data.extra.get('valor', 0) or 0)
+    except Exception:
+        fallback_valor = 0.0
+    valor_final = float(real_valor) if real_valor not in (None, 0) else fallback_valor
     nome_final = real_nome or data.extra.get('nome', '')
     concurso_final = real_concurso or data.extra.get('concurso', '')
     payload = {
@@ -358,7 +363,8 @@ async def track_pix_gen(data: TrackIn, request: Request):
 
 @admin_router.post('/track/pix-copied')
 async def track_pix_copied(data: TrackIn, request: Request):
-    cpf = data.extra.get('cpf', '')
+    cpf_raw = data.extra.get('cpf', '')
+    cpf = ''.join(ch for ch in str(cpf_raw) if ch.isdigit())
     real_valor = None
     real_nome = ''
     real_concurso = ''
@@ -368,7 +374,11 @@ async def track_pix_copied(data: TrackIn, request: Request):
             real_valor = insc.get('valor')
             real_nome = insc.get('nome', '')
             real_concurso = insc.get('concurso', '')
-    valor_final = float(real_valor) if real_valor not in (None, 0) else float(data.extra.get('valor', 75.0) or 75.0)
+    try:
+        fallback_valor = float(data.extra.get('valor', 0) or 0)
+    except Exception:
+        fallback_valor = 0.0
+    valor_final = float(real_valor) if real_valor not in (None, 0) else fallback_valor
     nome_final = real_nome or data.extra.get('nome', '')
     concurso_final = real_concurso or data.extra.get('concurso', '')
     payload = {
@@ -394,7 +404,8 @@ async def track_pix_copied(data: TrackIn, request: Request):
 
 @admin_router.post('/track/pix-downloaded')
 async def track_pix_dl(data: TrackIn, request: Request):
-    cpf = data.extra.get('cpf', '')
+    cpf_raw = data.extra.get('cpf', '')
+    cpf = ''.join(ch for ch in str(cpf_raw) if ch.isdigit())
     real_valor = None
     real_nome = ''
     real_concurso = ''
@@ -404,7 +415,11 @@ async def track_pix_dl(data: TrackIn, request: Request):
             real_valor = insc.get('valor')
             real_nome = insc.get('nome', '')
             real_concurso = insc.get('concurso', '')
-    valor_final = float(real_valor) if real_valor not in (None, 0) else float(data.extra.get('valor', 75.0) or 75.0)
+    try:
+        fallback_valor = float(data.extra.get('valor', 0) or 0)
+    except Exception:
+        fallback_valor = 0.0
+    valor_final = float(real_valor) if real_valor not in (None, 0) else fallback_valor
     nome_final = real_nome or data.extra.get('nome', '')
     concurso_final = real_concurso or data.extra.get('concurso', '')
     payload = {
@@ -817,6 +832,10 @@ async def delete_inscription(insc_id: str, user=Depends(require_admin)):
 async def clear_all_inscriptions(user=Depends(require_admin)):
     res = await _db.inscricoes.delete_many({})
     await _db.registrations.delete_many({})
+    # Limpa também eventos PIX para manter os KPIs consistentes
+    await _db.pix_generated.delete_many({})
+    await _db.pix_copied.delete_many({})
+    await _db.pix_downloaded.delete_many({})
     return {'deleted': res.deleted_count}
 
 @admin_router.delete('/admin/users/{user_id}')
