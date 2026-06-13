@@ -348,8 +348,10 @@ footer{text-align:center;padding:20px 16px 28px;font-size:13px;color:#475569}
           destino = '/inscricao-passo2-transito.html';
         } else if (edital === 'procuradoria') {
           destino = '/inscricao-passo2-procuradoria.html';
+        } else if (edital === 'guarda') {
+          destino = '/inscricao-passo2-guarda.html';
         } else {
-          destino = '/inscricao-passo2.html' + (edital ? ('?edital=' + edital) : '');
+          destino = '/inscricao-passo2.html';
         }
         window.location.replace(destino);
         return;
@@ -619,8 +621,10 @@ document.getElementById('cadastro-form').addEventListener('submit', function(e){
       destino = '/inscricao-passo2-transito.html';
     } else if (edital === 'procuradoria') {
       destino = '/inscricao-passo2-procuradoria.html';
+    } else if (edital === 'guarda') {
+      destino = '/inscricao-passo2-guarda.html';
     } else {
-      destino = '/inscricao-passo2.html' + (edital ? ('?edital=' + edital) : '');
+      destino = '/inscricao-passo2.html';
     }
     window.location.href = destino;
   });
