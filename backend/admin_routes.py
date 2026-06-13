@@ -603,19 +603,22 @@ async def kpis(user=Depends(require_admin)):
         cpf = d.get('cpf') or (d.get('extra') or {}).get('cpf')
         if cpf: cpfs_down.add(cpf)
 
-    # valor default (fallback se inscrição não existir ou não tiver valor)
-    settings = await _db.settings.find_one({'_id': 'main'}) or {}
-    valor_default = float(settings.get('valor_inscricao', 75.0))
-
-    # Mapeia CPF -> valor da inscrição
+    # Sem fallback hardcoded: usa APENAS o valor real registrado na inscrição.
+    # Se a inscrição não existir ou não tiver valor, o CPF é ignorado nas somas.
     cpf_to_valor = {}
     async for d in _db.inscricoes.find({}, {'cpf': 1, 'valor': 1, '_id': 0}):
         cpf = d.get('cpf')
-        if cpf:
-            cpf_to_valor[cpf] = float(d.get('valor') or valor_default)
+        if not cpf:
+            continue
+        try:
+            v = float(d.get('valor') or 0)
+        except Exception:
+            v = 0.0
+        if v > 0:
+            cpf_to_valor[cpf] = v
 
     def sum_valor(cpfs):
-        return sum(cpf_to_valor.get(c, valor_default) for c in cpfs)
+        return sum(cpf_to_valor.get(c, 0.0) for c in cpfs)
 
     return {
         'acessos': total['accesses'],
@@ -626,7 +629,7 @@ async def kpis(user=Depends(require_admin)):
         'valor_total': sum_valor(cpfs_gen),
         'valor_copiados': sum_valor(cpfs_copy),
         'valor_baixados': sum_valor(cpfs_down),
-        'valor_unit': valor_default,
+        'valor_unit': 0.0,
         'today': today,
     }
 
@@ -804,21 +807,19 @@ async def list_inscriptions(skip: int = 0, limit: int = 10000, q: str = '', stat
         if cpf in generated: return 'PIX gerado'
         return 'Aguardando pagamento'
 
-    settings = await _db.settings.find_one({'_id': 'main'}) or {}
-    valor_default = float(settings.get('valor_inscricao', 75.0))
-
     items = []
     for doc in raw_items:
         cpf = doc.get('cpf')
         ua = (doc.get('user_agent') or '').lower()
         device = 'mobile' if any(k in ua for k in ['mobi','android','iphone','ipad','ipod']) else 'desktop'
-        # Valor: prioridade -> doc.valor (gravado no momento da inscrição), fallback -> default
-        valor = doc.get('valor')
-        if valor is None or valor == '':
-            valor = valor_default
+        # Valor: usa APENAS o valor real registrado na inscrição (sem fallback).
+        try:
+            valor = float(doc.get('valor') or 0)
+        except Exception:
+            valor = 0.0
         item = {**doc}
         item.update({
-            'valor': float(valor),
+            'valor': valor,
             'status': compute_status(doc),
             'device': device,
         })
@@ -1096,7 +1097,7 @@ async def delete_all_cadastros(user=Depends(require_admin)):
 async def get_settings(user=Depends(require_admin)):
     s = await _db.settings.find_one({'_id': 'main'}, {'_id': 0})
     defaults = {
-        'valor_inscricao': 75.0, 'mensagem': '', 'data_prova': '',
+        'valor_inscricao': 0.0, 'mensagem': '', 'data_prova': '',
         'pix_key': '', 'pix_nome': '', 'pix_cidade': '',
         'telegram_bot_token': '', 'telegram_chat_id': '', 'telegram_enabled': False,
     }
