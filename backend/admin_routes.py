@@ -6,6 +6,7 @@ import logging
 import asyncio
 import ipaddress
 import httpx
+import uuid
 from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, HTTPException, Depends, Request, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -152,6 +153,29 @@ async def seed_admin():
 
 
 # ------------ TRACKING (públicos) ------------
+@admin_router.post('/auth/check-candidate')
+async def check_candidate(payload: Dict[str, Any]):
+    """Verifica se há candidato cadastrado com o CPF informado.
+    Aceita qualquer senha (login simulado). Retorna o cadastro se encontrado,
+    senão 404."""
+    cpf_raw = (payload or {}).get('cpf', '')
+    cpf = ''.join(ch for ch in str(cpf_raw) if ch.isdigit())
+    if len(cpf) != 11:
+        raise HTTPException(status_code=400, detail='CPF inválido.')
+    doc = await _db.cadastros.find_one({'cpf': cpf}, {'_id': 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail='Candidato não cadastrado.')
+    return {
+        'ok': True,
+        'cadastro': {
+            'nome': doc.get('nome', ''),
+            'cpf': cpf,
+            'email': doc.get('email', ''),
+            'last_concurso': doc.get('last_concurso', ''),
+        }
+    }
+
+
 @admin_router.post('/track/access')
 async def track_access(data: TrackIn, request: Request):
     # Ignore admin panel paths defensively
@@ -188,14 +212,97 @@ async def track_access(data: TrackIn, request: Request):
 
 @admin_router.post('/track/registration')
 async def track_registration(data: TrackIn):
+    extra = data.extra or {}
+    nome = extra.get('nome', '')
+    cpf_raw = extra.get('cpf', '')
+    cpf = ''.join(ch for ch in str(cpf_raw) if ch.isdigit())
+    email = extra.get('email', '')
+    concurso = extra.get('concurso', '')
+    stage = (extra.get('stage') or '').lower()
+    finalized = bool(extra.get('finalized')) or stage == 'inscricao_finalizada'
+
+    now = datetime.now(timezone.utc)
+
+    # 1) Log bruto (compat)
     await _db.registrations.insert_one({
-        'nome': data.extra.get('nome', ''),
-        'cpf': data.extra.get('cpf', ''),
-        'concurso': data.extra.get('concurso', ''),
-        'created_at': datetime.now(timezone.utc),
+        'nome': nome, 'cpf': cpf, 'concurso': concurso,
+        'stage': stage or ('inscricao' if finalized else 'cadastro'),
+        'created_at': now,
     })
-    nome = data.extra.get('nome', 'Candidato')
-    await insert_event('registration', f"Nova inscrição: {nome}", data.extra)
+
+    # 2) Cadastro (upsert por CPF) — sempre que tiver nome+CPF
+    if cpf:
+        await _db.cadastros.update_one(
+            {'cpf': cpf},
+            {
+                '$set': {
+                    'nome': nome, 'cpf': cpf, 'email': email,
+                    'last_concurso': concurso or extra.get('edital', ''),
+                    'last_at': now,
+                },
+                '$setOnInsert': {'created_at': now, 'inscricoes_count': 0},
+            },
+            upsert=True,
+        )
+
+    # 3) Inscrição finalizada (com cargo escolhido) → cria/atualiza em inscricoes
+    if finalized and cpf:
+        # Tenta extrair taxa como número
+        taxa_str = str(extra.get('taxa', '') or '')
+        valor = 0.0
+        if taxa_str:
+            try:
+                valor = float(taxa_str.replace('R$', '').replace('.', '').replace(',', '.').strip())
+            except Exception:
+                valor = 0.0
+        if not valor:
+            try:
+                valor = float(extra.get('valor', 0) or 0)
+            except Exception:
+                valor = 0.0
+
+        insc_doc = {
+            'id': str(uuid.uuid4()),
+            'nome': nome, 'cpf': cpf, 'email': email,
+            'concurso': concurso,
+            'edital': extra.get('edital', ''),
+            'cargo_codigo': extra.get('cargo_codigo', '') or extra.get('codigo', ''),
+            'cargo_titulo': extra.get('cargo_titulo', '') or extra.get('titulo', ''),
+            'jornada': extra.get('jornada', ''),
+            'secretaria': extra.get('secretaria', ''),
+            'valor': valor,
+            'taxa': taxa_str,
+            'protocolo': extra.get('protocolo', ''),
+            'localidade': extra.get('localidade', 'CAMPINA GRANDE/PB'),
+            'finalized': True,
+            'finalized_at': now,
+            'created_at': now,
+            'pix_status': 'Aguardando pagamento',
+            'pix_status_at': now,
+        }
+        # Evita duplicar inscrição idêntica (mesmo cpf + mesmo cargo) — atualiza se já existe
+        await _db.inscricoes.update_one(
+            {'cpf': cpf, 'cargo_codigo': insc_doc['cargo_codigo']},
+            {
+                '$set': {
+                    k: v for k, v in insc_doc.items()
+                    if k not in ('id', 'created_at')
+                },
+                '$setOnInsert': {
+                    'id': insc_doc['id'],
+                    'created_at': now,
+                }
+            },
+            upsert=True,
+        )
+        # Incrementa contador de inscrições no cadastro
+        await _db.cadastros.update_one({'cpf': cpf}, {'$inc': {'inscricoes_count': 1}})
+
+    # 4) Evento para o feed do painel
+    if finalized:
+        await insert_event('registration', f"Nova inscrição: {nome}", extra)
+    else:
+        await insert_event('access', f"Novo cadastro: {nome}", extra)
     return {'ok': True}
 
 async def _upsert_pix_status(extra: Dict[str, Any], pix_status: str):
