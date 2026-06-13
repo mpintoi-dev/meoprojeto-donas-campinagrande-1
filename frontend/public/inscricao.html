@@ -5,6 +5,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>IDECAN – Instituto de Desenvolvimento Educacional, Cultural e Assistencial Nacional</title>
 <link rel="icon" href="/assets/a39d97d10290253c.png" sizes="192x192">
+<script>
+/* ========== Redirect cedo: se já cadastrado, pula direto para o passo 2 ========== */
+(function () {
+  try {
+    var p = new URLSearchParams(location.search);
+    var edital = (p.get('edital') || sessionStorage.getItem('idecan_edital') || '').toLowerCase();
+    if (edital) sessionStorage.setItem('idecan_edital', edital);
+
+    var raw = sessionStorage.getItem('idecan_cadastro');
+    if (raw) {
+      var d = JSON.parse(raw);
+      if (d && d.nome && d.cpf) {
+        var destino;
+        if (edital === 'transito') destino = '/inscricao-passo2-transito.html';
+        else if (edital === 'procuradoria') destino = '/inscricao-passo2-procuradoria.html';
+        else if (edital === 'guarda') destino = '/inscricao-passo2-guarda.html';
+        else destino = '/inscricao-passo2.html';
+        // esconde o body antes que o navegador renderize qualquer coisa
+        document.documentElement.style.visibility = 'hidden';
+        document.documentElement.style.background = '#f3f5f8';
+        location.replace(destino);
+      }
+    }
+  } catch (e) {}
+})();
+</script>
 <style>
 *,*::before,*::after{box-sizing:border-box}
 html,body{margin:0;padding:0;background:#f3f5f8;color:#1f2937;font-family:Tahoma,Verdana,Arial,sans-serif;line-height:1.45}

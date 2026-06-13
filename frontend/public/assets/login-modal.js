@@ -242,12 +242,40 @@
       testid === 'btn-inscricao-online' ||
       (href && /\/inscricao\.html(\?|$)/.test(href));
 
-    if (isInscricaoLink && !hasCadastro()) {
+    if (!isInscricaoLink) return;
+
+    // Identifica o edital pelo href (?edital=...) ou pela URL atual da página
+    var edital = '';
+    var m = (href || '').match(/[?&]edital=([^&#]+)/);
+    if (m) edital = decodeURIComponent(m[1]);
+    if (!edital) {
+      // tenta inferir pela página onde está
+      var path = (location.pathname || '').toLowerCase();
+      if (path.indexOf('agente-transito') !== -1) edital = 'transito';
+      else if (path.indexOf('procuradoria') !== -1) edital = 'procuradoria';
+      else if (path.indexOf('guarda-municipal') !== -1) edital = 'guarda';
+      else if (path.indexOf('quadro-geral') !== -1) edital = 'quadro-geral';
+    }
+    // persiste o edital escolhido
+    if (edital) {
+      try { sessionStorage.setItem('idecan_edital', edital); } catch (err) {}
+    }
+
+    if (hasCadastro()) {
+      // Usuário já cadastrado → vai DIRETO para o passo 2 (sem passar por /inscricao.html → sem flash)
       e.preventDefault(); e.stopPropagation();
-      // salva o destino para reabrir depois (se quiser refinar)
-      openModal();
+      var destino;
+      if (edital === 'transito') destino = '/inscricao-passo2-transito.html';
+      else if (edital === 'procuradoria') destino = '/inscricao-passo2-procuradoria.html';
+      else if (edital === 'guarda') destino = '/inscricao-passo2-guarda.html';
+      else destino = '/inscricao-passo2.html';
+      window.location.href = destino;
       return;
     }
+
+    // Não cadastrado → abre modal de login
+    e.preventDefault(); e.stopPropagation();
+    openModal();
   }
 
   // captura na fase de captura para vencer outros handlers (auth.js, etc.)
