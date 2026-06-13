@@ -3,8 +3,15 @@
    Usa window.__cargosData (lista de cargos), window.__concursoLabel,
    window.__concursoEdital e window.__concursoEntidade configurados
    pelo HTML específico do concurso.
+   Depende de /assets/notice.js para os avisos bonitos.
    ============================================================ */
 (function () {
+  function showNotice(msg, opts) {
+    if (window.IdecanNotice) return window.IdecanNotice(msg, opts);
+    alert(msg);
+    return Promise.resolve();
+  }
+
   var CAD = null;
   try { CAD = JSON.parse(sessionStorage.getItem('idecan_cadastro') || 'null'); } catch (e) {}
   if (!CAD || !CAD.nome || !CAD.cpf) {
@@ -103,13 +110,13 @@
     if (e) { e.preventDefault(); e.stopPropagation(); }
     var aceito = document.querySelector('input[name="CHK_AceitoRequerimento"], #CHK_AceitoRequerimento');
     if (!aceito || !aceito.checked) {
-      alert('É necessário marcar "Aceito" para prosseguir com a inscrição.');
+      showNotice('É necessário marcar "Aceito" para prosseguir com a inscrição.', { title: 'Aceite obrigatório' });
       return;
     }
     var sel = document.getElementById('CMB_Cargo');
     var idx = sel ? parseInt(sel.value, 10) : -1;
     if (isNaN(idx) || idx < 0 || !DATA.cargos[idx]) {
-      alert('Por favor, selecione um cargo.');
+      showNotice('Por favor, selecione um cargo para continuar.', { title: 'Cargo não selecionado' });
       return;
     }
     var cg = DATA.cargos[idx];

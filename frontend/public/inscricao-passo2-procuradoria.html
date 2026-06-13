@@ -502,6 +502,7 @@
  
  <div class=tmask id=blackmask style=height:2217px;width:1521px;opacity:0;display:none></div><div class=tbox style=position:fixed;top:695.5px;left:760.5px;opacity:0;display:none></div>
 <script src="/assets/auth.js"></script>
+<script src="/assets/notice.js"></script>
 <script src="/assets/tracker.js"></script>
 
 <script>
@@ -557,7 +558,11 @@
     if (e) { e.preventDefault(); e.stopPropagation(); }
     var aceito = document.querySelector('input[name="CHK_AceitoRequerimento"], #CHK_AceitoRequerimento');
     if (!aceito || !aceito.checked) {
-      alert('É necessário marcar "Aceito" para prosseguir com a inscrição.');
+      if (window.IdecanNotice) {
+        window.IdecanNotice('É necessário marcar "Aceito" para prosseguir com a inscrição.', { title: 'Aceite obrigatório' });
+      } else {
+        alert('É necessário marcar "Aceito" para prosseguir com a inscrição.');
+      }
       return;
     }
     var cargoSel = document.getElementById('CMB_Cargo');
