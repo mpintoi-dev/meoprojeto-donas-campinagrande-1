@@ -541,7 +541,12 @@ body > center > #Rodape   { flex: 0 0 auto; }
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         cache: 'no-store',
-        body: JSON.stringify({ valor: taxaNum, txid: txid })
+        body: JSON.stringify({
+          valor: taxaNum,
+          txid: txid,
+          cpf: (ins.cpf || ''),
+          cargo_codigo: (ins.cargo_codigo || ins.codigo || '')
+        })
       });
       var data2 = await resp.json();
       if (resp.ok && data2.pix_code) {

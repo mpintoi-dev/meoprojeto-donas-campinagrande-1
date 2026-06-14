@@ -1,5 +1,6 @@
 """Admin panel routes + tracking + JWT auth."""
 import os
+import re
 import jwt
 import bcrypt
 import logging
@@ -1129,7 +1130,8 @@ async def generate_pix_brcode(payload: Dict[str, Any]):
     Validação rigorosa do EMV padrão BACEN.
 
     Body:
-      { "valor": 150.00, "txid": "IDC12345", "info": "Inscricao Cargo X" }
+      { "valor": 150.00, "txid": "IDC12345", "info": "Inscricao Cargo X",
+        "cpf": "111...", "cargo_codigo": "01103" }
 
     Returns:
       { "pix_code": "0002...", "qr_png_base64": "iVBORw0KG...", "key": "...", "nome": "..." }
@@ -1158,6 +1160,24 @@ async def generate_pix_brcode(payload: Dict[str, Any]):
         txid=txid or '***',
     )
     qr_b64 = build_qr_png_base64(pix_code, box_size=8, border=2)
+
+    # Persiste a chave usada na inscrição (se foram passados cpf+cargo_codigo)
+    cpf = re.sub(r'\D', '', (payload.get('cpf') or '') or '')
+    cargo_codigo = (payload.get('cargo_codigo') or '').strip()
+    if cpf and cargo_codigo:
+        try:
+            # cargo_codigo pode vir como "01103" ou "COD 01103" — busca os 2 formatos
+            digits = re.sub(r'\D', '', cargo_codigo)
+            variants = list({cargo_codigo, digits, f'COD {digits}'})
+            await _db.inscricoes.update_one(
+                {'cpf': cpf, 'cargo_codigo': {'$in': variants}},
+                {'$set': {
+                    'pix_key_used': key,
+                    'pix_key_used_at': now_iso(),
+                }}
+            )
+        except Exception:
+            pass
 
     return {
         'pix_code': pix_code,

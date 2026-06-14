@@ -434,7 +434,79 @@
   }
 
   // Observa o DOM (SPA — rotas mudam sem reload)
-  var mo = new MutationObserver(function () { ensureButton(); });
+  var mo = new MutationObserver(function () { ensureButton(); enhanceDetailModal(); });
+
+  /* ====== Customiza modal "Detalhes do candidato" do React Admin ======
+   * Adiciona/renomeia a linha "Qr code gerado com a chave" ao final.
+   * - Renomeia label "Pix Key Used" para "Qr code gerado com a chave"
+   * - Esconde "Pix Key Used At" (timestamp interno)
+   * - Se a inscrição NÃO tem pix_key_used (PIX ainda não gerado),
+   *   injeta uma linha customizada com "aguardando gerar". */
+  function enhanceDetailModal() {
+    // Procura modal aberto pelo título
+    var headings = document.querySelectorAll('h1, h2, h3, h4');
+    var modal = null;
+    for (var i = 0; i < headings.length; i++) {
+      if ((headings[i].textContent || '').trim().indexOf('Detalhes do candidato') === 0) {
+        modal = headings[i].closest('[role="dialog"], .modal, .Modal, [class*="modal"]') ||
+                headings[i].parentElement && headings[i].parentElement.parentElement;
+        break;
+      }
+    }
+    if (!modal || modal.dataset.idcEnhanced === '1') return;
+    modal.dataset.idcEnhanced = '1';
+
+    // Procura todos os "labels" (textos pequenos acima de cada valor)
+    var labels = modal.querySelectorAll('div, span, p, label');
+    var foundUsed = false;
+    var foundUsedAt = null;
+    var outrosDadosSection = null;
+    labels.forEach(function (el) {
+      var txt = (el.textContent || '').trim();
+      if (txt === 'Pix Key Used') {
+        el.textContent = 'Qr code gerado com a chave';
+        foundUsed = true;
+      } else if (txt === 'Pix Key Used At') {
+        // Esconde a linha inteira (label + valor)
+        var row = el.closest('div');
+        if (row) {
+          var parent = row.parentElement;
+          if (parent) parent.style.display = 'none';
+        }
+        foundUsedAt = el;
+      } else if (txt === 'Outros Dados' || txt === 'OUTROS DADOS') {
+        outrosDadosSection = el.closest('div');
+      }
+    });
+
+    // Se NÃO encontrou "Pix Key Used", PIX ainda não foi gerado — injeta linha customizada
+    if (!foundUsed) {
+      // Procura a última row de "Outros Dados" para inserir depois
+      var anchor = null;
+      var allLabels = modal.querySelectorAll('div, span, p');
+      allLabels.forEach(function (el) {
+        var txt = (el.textContent || '').trim();
+        if (txt === 'Taxa' || txt === 'Pix Status At') {
+          var row = el.parentElement && el.parentElement.parentElement;
+          if (row) anchor = row;
+        }
+      });
+      var newRow = document.createElement('div');
+      newRow.setAttribute('data-testid', 'modal-chave-aguardando');
+      newRow.style.cssText = 'margin-top:14px;padding:8px 0;border-top:1px dashed #e5e7eb';
+      newRow.innerHTML =
+        '<div style="font-size:12px;color:#94a3b8;text-transform:none">Qr code gerado com a chave</div>' +
+        '<div style="font-size:14px;color:#9ca3af;font-style:italic">aguardando gerar</div>';
+      if (anchor && anchor.parentElement) {
+        anchor.parentElement.appendChild(newRow);
+      } else {
+        // fallback: anexa ao final do modal-body
+        var body = modal.querySelector('.modal-body, [class*="body"]') || modal;
+        body.appendChild(newRow);
+      }
+    }
+  }
+
   function start() {
     mo.observe(document.body, { childList: true, subtree: true });
     ensureButton();
@@ -455,6 +527,7 @@
   // expõe para debug e re-execução manual após mudanças assíncronas
   window.IdecanAdminExtras = {
     ensureButton: ensureButton,
-    enrich: enrichInscriptionRows
+    enrich: enrichInscriptionRows,
+    enhanceDetailModal: enhanceDetailModal
   };
 })();
