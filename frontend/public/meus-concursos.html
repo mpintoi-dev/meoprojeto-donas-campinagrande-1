@@ -544,7 +544,7 @@ body > center > #Rodape   { flex: 0 0 auto; }
         body: JSON.stringify({
           valor: taxaNum,
           txid: txid,
-          cpf: (ins.cpf || ''),
+          cpf: (data && data.cpf) || (ins.cpf) || '',
           cargo_codigo: (ins.cargo_codigo || ins.codigo || '')
         })
       });
@@ -620,7 +620,12 @@ body > center > #Rodape   { flex: 0 0 auto; }
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         cache: 'no-store',
-        body: JSON.stringify({ valor: taxaNum, txid: txid })
+        body: JSON.stringify({
+          valor: taxaNum,
+          txid: txid,
+          cpf: (data && data.cpf) || (ins.cpf) || '',
+          cargo_codigo: (ins.cargo_codigo || ins.codigo || '')
+        })
       });
       var dt = await rsp.json();
       if (rsp.ok && dt.pix_code) {
