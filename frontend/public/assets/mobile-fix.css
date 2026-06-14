@@ -347,13 +347,17 @@
   .elementor-element-5f819c0 > *,
   .elementor-element-f266d75 > * { min-width: 0 !important; max-width: 100% !important; }
   /* === Tipografia: títulos do Elementor proporcionais === */
-  h1.elementor-heading-title { font-size: clamp(22px, 6.5vw, 34px) !important; line-height: 1.15 !important; }
-  h2.elementor-heading-title { font-size: clamp(20px, 5.5vw, 30px) !important; line-height: 1.18 !important; }
-  h3.elementor-heading-title { font-size: clamp(18px, 5vw, 24px) !important; line-height: 1.2 !important; }
-  .elementor-heading-title { word-break: break-word; }
-  /* Remove margem lateral excessiva em descrições */
-  .elementor-element.elementor-element-0e1149c > .elementor-widget-container,
-  .elementor-element.elementor-element-5539f1c > .elementor-widget-container { margin-left: 8px !important; margin-right: 8px !important; }
+  h1.elementor-heading-title { font-size: clamp(20px, 5.5vw, 32px) !important; line-height: 1.15 !important; letter-spacing: 0 !important; }
+  h2.elementor-heading-title { font-size: clamp(18px, 5vw, 28px) !important; line-height: 1.18 !important; letter-spacing: 0 !important; }
+  h3.elementor-heading-title { font-size: clamp(16px, 4.5vw, 22px) !important; line-height: 1.2 !important; }
+  .elementor-heading-title { word-break: break-word; padding: 0 !important; margin: 0 !important; }
+  /* Remove margem lateral residual em qualquer widget de heading */
+  .elementor-widget-heading,
+  .elementor-widget-heading > .elementor-widget-container {
+    padding: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
 
   /* === Modal de Login === */
   #lm-modal { max-width: 92vw !important; }
