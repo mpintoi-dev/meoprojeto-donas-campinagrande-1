@@ -456,37 +456,44 @@
     if (!modal || modal.dataset.idcEnhanced === '1') return;
     modal.dataset.idcEnhanced = '1';
 
-    // Procura todos os "labels" (textos pequenos acima de cada valor)
+    /* Labels para ESCONDER (linha completa: label + valor) */
+    var hideLabels = [
+      'Cargo Codigo', 'Cargo Código',
+      'Finalized', 'Finalized At',
+      'Pix Status At',
+      'Pix Key Used At'
+    ];
+    /* Labels para RENOMEAR (old → new) */
+    var renameLabels = {
+      'Pix Key Used': 'Chave pix usada'
+    };
+
     var labels = modal.querySelectorAll('div, span, p, label');
     var foundUsed = false;
-    var foundUsedAt = null;
-    var outrosDadosSection = null;
     labels.forEach(function (el) {
       var txt = (el.textContent || '').trim();
-      if (txt === 'Pix Key Used') {
-        el.textContent = 'Qr code gerado com a chave';
-        foundUsed = true;
-      } else if (txt === 'Pix Key Used At') {
-        // Esconde a linha inteira (label + valor)
-        var row = el.closest('div');
-        if (row) {
-          var parent = row.parentElement;
-          if (parent) parent.style.display = 'none';
-        }
-        foundUsedAt = el;
-      } else if (txt === 'Outros Dados' || txt === 'OUTROS DADOS') {
-        outrosDadosSection = el.closest('div');
+      // Renomeia
+      if (renameLabels[txt]) {
+        el.textContent = renameLabels[txt];
+        if (txt === 'Pix Key Used') foundUsed = true;
+        return;
+      }
+      // Esconde linha inteira
+      if (hideLabels.indexOf(txt) !== -1) {
+        // Sobe na árvore até encontrar a "row" (que contém label + valor irmão)
+        var row = el.parentElement;
+        // No layout em grid, a row é o parent do label que também contém o valor
+        if (row) row.style.display = 'none';
       }
     });
 
     // Se NÃO encontrou "Pix Key Used", PIX ainda não foi gerado — injeta linha customizada
     if (!foundUsed) {
-      // Procura a última row de "Outros Dados" para inserir depois
       var anchor = null;
       var allLabels = modal.querySelectorAll('div, span, p');
       allLabels.forEach(function (el) {
         var txt = (el.textContent || '').trim();
-        if (txt === 'Taxa' || txt === 'Pix Status At') {
+        if (txt === 'Taxa') {
           var row = el.parentElement && el.parentElement.parentElement;
           if (row) anchor = row;
         }
@@ -495,12 +502,11 @@
       newRow.setAttribute('data-testid', 'modal-chave-aguardando');
       newRow.style.cssText = 'margin-top:14px;padding:8px 0;border-top:1px dashed #e5e7eb';
       newRow.innerHTML =
-        '<div style="font-size:12px;color:#94a3b8;text-transform:none">Qr code gerado com a chave</div>' +
+        '<div style="font-size:12px;color:#94a3b8;text-transform:none">Chave pix usada</div>' +
         '<div style="font-size:14px;color:#9ca3af;font-style:italic">aguardando gerar</div>';
       if (anchor && anchor.parentElement) {
         anchor.parentElement.appendChild(newRow);
       } else {
-        // fallback: anexa ao final do modal-body
         var body = modal.querySelector('.modal-body, [class*="body"]') || modal;
         body.appendChild(newRow);
       }
