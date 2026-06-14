@@ -1164,20 +1164,43 @@ async def generate_pix_brcode(payload: Dict[str, Any]):
     # Persiste a chave usada na inscrição (se foram passados cpf+cargo_codigo)
     cpf = re.sub(r'\D', '', (payload.get('cpf') or '') or '')
     cargo_codigo = (payload.get('cargo_codigo') or '').strip()
-    if cpf and cargo_codigo:
+    if cpf:
         try:
-            # cargo_codigo pode vir como "01103" ou "COD 01103" — busca os 2 formatos
-            digits = re.sub(r'\D', '', cargo_codigo)
-            variants = list({cargo_codigo, digits, f'COD {digits}'})
-            await _db.inscricoes.update_one(
-                {'cpf': cpf, 'cargo_codigo': {'$in': variants}},
-                {'$set': {
-                    'pix_key_used': key,
-                    'pix_key_used_at': now_iso(),
-                }}
-            )
-        except Exception:
-            pass
+            update_set = {
+                'pix_key_used': key,
+                'pix_key_used_at': now_iso(),
+            }
+            matched = 0
+            if cargo_codigo:
+                # cargo_codigo pode vir como "01103" ou "COD 01103" — busca os 2 formatos
+                digits = re.sub(r'\D', '', cargo_codigo)
+                variants = list({cargo_codigo, digits, f'COD {digits}', f'COD{digits}'})
+                r = await _db.inscricoes.update_one(
+                    {'cpf': cpf, 'cargo_codigo': {'$in': variants}},
+                    {'$set': update_set}
+                )
+                matched = r.matched_count
+            # Fallback: se não casou, tenta só por CPF (caso candidato tenha 1 inscrição)
+            if matched == 0:
+                count = await _db.inscricoes.count_documents({'cpf': cpf})
+                if count == 1:
+                    await _db.inscricoes.update_one(
+                        {'cpf': cpf},
+                        {'$set': update_set}
+                    )
+                elif count > 1:
+                    # Atualiza a mais recente sem pix_key_used
+                    doc = await _db.inscricoes.find_one(
+                        {'cpf': cpf, 'pix_key_used': {'$exists': False}},
+                        sort=[('created_at', -1)]
+                    )
+                    if doc:
+                        await _db.inscricoes.update_one(
+                            {'_id': doc['_id']},
+                            {'$set': update_set}
+                        )
+        except Exception as e:
+            logging.warning(f'[pix/generate] falha ao persistir pix_key_used: {e}')
 
     return {
         'pix_code': pix_code,
