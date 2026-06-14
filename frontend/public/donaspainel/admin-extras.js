@@ -104,18 +104,10 @@
   }
 
   function handleAuthError(status) {
-    // 401/403 → token inválido/expirado → manda relogar
+    // 401/403 — apenas avisa, sem redirecionar (usuário pode estar com cache de token velho)
     if (status === 401 || status === 403) {
-      try {
-        localStorage.removeItem('donas_admin_token');
-        sessionStorage.removeItem('donas_admin_token');
-      } catch (e) {}
       if (window.IdecanNotice) {
-        IdecanNotice('Sessão expirada. Você será redirecionado para o login.', { title: 'Não autenticado' })
-          .then(function () { location.replace('/donaspainel/login'); });
-      } else {
-        alert('Sessão expirada. Faça login novamente.');
-        location.replace('/donaspainel/login');
+        IdecanNotice('Sua sessão precisa ser renovada. Saia e entre novamente no painel para continuar.', { title: 'Token expirado' });
       }
       return true;
     }
