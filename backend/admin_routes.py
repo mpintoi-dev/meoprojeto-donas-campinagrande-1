@@ -1089,8 +1089,11 @@ async def export_cadastros_full_txt(q: str = '', user=Depends(require_admin)):
 
 
 @admin_router.delete('/admin/cadastros')
+@admin_router.post('/admin/cadastros/clear-all')
 async def delete_all_cadastros(user=Depends(require_admin)):
-    """Apaga TODOS os cadastros da coleção 'cadastros' (não afeta inscrições)."""
+    """Apaga TODOS os cadastros da coleção 'cadastros' (não afeta inscrições).
+    Aceita DELETE /admin/cadastros e POST /admin/cadastros/clear-all (workaround
+    para reverse-proxies que bloqueiam o método DELETE)."""
     res = await _db.cadastros.delete_many({})
     return {'ok': True, 'deleted': res.deleted_count}
 

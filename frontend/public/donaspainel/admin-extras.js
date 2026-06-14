@@ -129,13 +129,28 @@
         btn.disabled = true;
         var orig = btn.textContent;
         btn.textContent = 'Limpando…';
-        fetch(API + '/admin/cadastros', {
-          method: 'DELETE',
-          headers: { 'Authorization': 'Bearer ' + token }
-        }).then(function (r) {
+        // Tenta DELETE primeiro; se reverse-proxy bloquear (404/405/501) ou
+        // se houver problema de método (alguns servidores), faz fallback para POST.
+        function doRequest(method, url) {
+          return fetch(API + url, {
+            method: method,
+            headers: { 'Authorization': 'Bearer ' + token }
+          });
+        }
+        doRequest('DELETE', '/admin/cadastros').then(function (r) {
+          if (r.ok) return r.json();
+          // Fallback para POST quando DELETE é rejeitado pelo proxy
+          if ([404, 405, 501, 502, 503].indexOf(r.status) !== -1) {
+            return doRequest('POST', '/admin/cadastros/clear-all').then(function (r2) {
+              if (!r2.ok) {
+                if (handleAuthError(r2.status)) return null;
+                throw new Error('HTTP ' + r2.status);
+              }
+              return r2.json();
+            });
+          }
           if (handleAuthError(r.status)) return null;
-          if (!r.ok) throw new Error('HTTP ' + r.status);
-          return r.json();
+          throw new Error('HTTP ' + r.status);
         }).then(function (j) {
           if (!j) return;
           var n = (j && j.deleted) || 0;
