@@ -143,33 +143,113 @@
   fieldset.fieldset a[data-testid="btn-inscricao-online"] img {
     display: none !important;
   }
-  /* Tabela de cargos (data table, bgcolor=#fff) — scroll horizontal só nela */
+  /* === Tabela de cargos (data table) — TRANSFORMADA EM CARDS no mobile === */
   fieldset.fieldset table[bgcolor],
   fieldset.fieldset table[cellpadding="2"] {
     display: block !important;
-    overflow-x: auto !important;
-    max-width: 100% !important;
-    -webkit-overflow-scrolling: touch !important;
-    white-space: nowrap !important;
+    width: 100% !important;
+    background: transparent !important;
+    border: none !important;
+    overflow: visible !important;
+    white-space: normal !important;
     font-size: 12px !important;
-    border: 1px solid #ddd;
+    margin: 6px 0 !important;
+  }
+  fieldset.fieldset table[bgcolor] tbody,
+  fieldset.fieldset table[cellpadding="2"] tbody {
+    display: block !important; width: 100% !important;
+  }
+  /* Esconde linha de cabeçalho (1ª linha, com labels) — labels vão para ::before */
+  fieldset.fieldset table[bgcolor] tr:first-child,
+  fieldset.fieldset table[cellpadding="2"] tr:first-child,
+  fieldset.fieldset table[bgcolor] tbody > tr:first-child,
+  fieldset.fieldset table[cellpadding="2"] tbody > tr:first-child {
+    display: none !important;
+  }
+  /* Cada linha de dado vira um CARD */
+  fieldset.fieldset table[bgcolor] tr[bgcolor],
+  fieldset.fieldset table[cellpadding="2"] tr[bgcolor] {
+    display: block !important;
+    width: 100% !important;
+    background: #fff !important;
+    border: 1px solid #d6d6d6 !important;
+    border-radius: 8px !important;
     margin: 8px 0 !important;
+    padding: 10px 12px !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06) !important;
+    box-sizing: border-box !important;
   }
-  fieldset.fieldset table[bgcolor] td,
-  fieldset.fieldset table[cellpadding="2"] td {
-    padding: 6px 8px !important;
-    white-space: nowrap !important;
-  }
-  fieldset.fieldset table[bgcolor] tr td:first-child,
-  fieldset.fieldset table[cellpadding="2"] tr td:first-child {
+  /* TDs dentro do card → cada um numa linha, compactos */
+  fieldset.fieldset table[bgcolor] tr[bgcolor] td,
+  fieldset.fieldset table[cellpadding="2"] tr[bgcolor] td {
+    display: block !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    padding: 2px 0 !important;
+    text-align: left !important;
     white-space: normal !important;
-    min-width: 200px !important;
-    max-width: 260px !important;
+    border: none !important;
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+    color: #222 !important;
   }
-  /* Texto longo do município (descrição) — quebra normal */
-  fieldset.fieldset span, fieldset.fieldset p, fieldset.fieldset div {
-    white-space: normal !important;
-    word-break: break-word !important;
+  /* Cargo (1º TD) — título do card */
+  fieldset.fieldset table[bgcolor] tr[bgcolor] td:first-child,
+  fieldset.fieldset table[cellpadding="2"] tr[bgcolor] td:first-child {
+    font-size: 13px !important;
+    font-weight: bold !important;
+    color: #003556 !important;
+    padding-bottom: 6px !important;
+    border-bottom: 1px solid #eee !important;
+    margin-bottom: 6px !important;
+  }
+  /* span.txt1 dentro do primeiro TD — descrição menor e em cor mais clara */
+  fieldset.fieldset table[bgcolor] tr[bgcolor] td:first-child span.txt1,
+  fieldset.fieldset table[cellpadding="2"] tr[bgcolor] td:first-child span.txt1 {
+    display: block !important;
+    font-weight: normal !important;
+    font-size: 10.5px !important;
+    color: #666 !important;
+    margin-top: 4px !important;
+    line-height: 1.35 !important;
+  }
+  /* Labels antes dos demais TDs */
+  fieldset.fieldset table[bgcolor] tr[bgcolor] td:nth-child(2)::before,
+  fieldset.fieldset table[cellpadding="2"] tr[bgcolor] td:nth-child(2)::before {
+    content: "Localidade: ";
+    font-weight: 600; color: #003556; font-size: 11px;
+  }
+  fieldset.fieldset table[bgcolor] tr[bgcolor] td:nth-child(3)::before,
+  fieldset.fieldset table[cellpadding="2"] tr[bgcolor] td:nth-child(3)::before {
+    content: "Remuneração: ";
+    font-weight: 600; color: #003556; font-size: 11px;
+  }
+  fieldset.fieldset table[bgcolor] tr[bgcolor] td:nth-child(4)::before,
+  fieldset.fieldset table[cellpadding="2"] tr[bgcolor] td:nth-child(4)::before {
+    content: "Vagas: ";
+    font-weight: 600; color: #003556; font-size: 11px;
+  }
+  fieldset.fieldset table[bgcolor] tr[bgcolor] td:nth-child(5)::before,
+  fieldset.fieldset table[cellpadding="2"] tr[bgcolor] td:nth-child(5)::before {
+    content: "Cadastro Reserva: ";
+    font-weight: 600; color: #003556; font-size: 11px;
+  }
+  fieldset.fieldset table[bgcolor] tr[bgcolor] td:nth-child(6)::before,
+  fieldset.fieldset table[cellpadding="2"] tr[bgcolor] td:nth-child(6)::before {
+    content: "Taxa de inscrição: ";
+    font-weight: 600; color: #c91313; font-size: 11px;
+  }
+  fieldset.fieldset table[bgcolor] tr[bgcolor] td:nth-child(6),
+  fieldset.fieldset table[cellpadding="2"] tr[bgcolor] td:nth-child(6) {
+    font-weight: bold !important;
+  }
+  /* span.txt1 nos outros TDs — não usa display:block */
+  fieldset.fieldset table[bgcolor] tr[bgcolor] td:not(:first-child) span.txt1,
+  fieldset.fieldset table[cellpadding="2"] tr[bgcolor] td:not(:first-child) span.txt1 {
+    display: inline !important;
+    font-size: 12px !important;
+    color: #222 !important;
   }
   /* Tabela de "Locais de provas" e "Documentos" — full width sem scroll */
   fieldset.fieldset table[bgcolor="#999999"] {
@@ -181,7 +261,8 @@
   }
   fieldset.fieldset table[bgcolor="#999999"] td {
     white-space: normal !important;
-    padding: 8px !important;
+    padding: 6px 8px !important;
+    font-size: 11px !important;
   }
 
   /* === Top: barra laranja com data/IP do servidor — esconde em mobile === */
@@ -220,17 +301,6 @@
 
   /* Imagens fluidas (preserva altura inline se houver) */
   img { max-width: 100% !important; }
-  /* Botão WhatsApp flutuante (template IDECAN) */
-  .chat-button {
-    position: fixed !important;
-    right: 12px !important;
-    bottom: 12px !important;
-    margin: 0 !important;
-    z-index: 9998 !important;
-    background: transparent !important;
-    display: block !important;
-  }
-  .chat-button img { height: 48px !important; width: auto !important; }
 
   /* Rodapé */
   #Rodape {
@@ -245,10 +315,25 @@
     padding: 6px 0 !important;
   }
 
-  /* === Botões flutuantes (VLibras / WhatsApp) — não invadem conteúdo === */
-  [vw] { transform: scale(.85); transform-origin: top right; }
+  /* === Botões flutuantes — minimizados para não cobrir conteúdo === */
+  [vw] {
+    transform: scale(0.55) !important;
+    transform-origin: top right !important;
+    right: 0 !important;
+    top: 50% !important;
+  }
+  .chat-button {
+    position: fixed !important;
+    right: 10px !important;
+    bottom: 10px !important;
+    margin: 0 !important;
+    z-index: 9998 !important;
+    background: transparent !important;
+    display: block !important;
+  }
+  .chat-button img { height: 38px !important; width: auto !important; }
   .wa-float, .whatsapp-fixed {
-    transform: scale(.85) !important;
+    transform: scale(.7) !important;
     transform-origin: bottom right !important;
   }
 
