@@ -91,43 +91,102 @@
   #Foto { display: none !important; }
   .wt-rotator, .c-panel { display: none !important; }
 
-  /* === Tabelas do edital (lista de cargos) — scroll horizontal preservando layout === */
-  fieldset.fieldset { padding: 8px 4px !important; margin: 8px 2px !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
-  fieldset.fieldset > table { width: 100% !important; }
-  /* Tabela aninhada (cargos) — permite scroll horizontal */
-  fieldset.fieldset table table {
+  /* === Fieldset do edital — conteúdo flui normalmente, SEM overflow horizontal === */
+  fieldset.fieldset {
+    padding: 10px 8px !important;
+    margin: 8px 4px !important;
+    overflow: visible !important;
+  }
+  fieldset.fieldset legend.legend1, fieldset.fieldset .legend1 {
+    font-size: 13px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    display: inline-block !important;
+    max-width: 96vw !important;
+    line-height: 1.3 !important;
+  }
+  /* Tabela WRAPPER (cellpadding=10/20) — quebra de linha normal, sem nowrap herdado */
+  fieldset.fieldset > table {
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: fixed !important;
+  }
+  fieldset.fieldset > table > tbody { display: block !important; width: 100% !important; }
+  fieldset.fieldset > table > tbody > tr { display: block !important; width: 100% !important; }
+  fieldset.fieldset > table > tbody > tr > td {
+    display: block !important;
+    width: 100% !important;
+    white-space: normal !important;
+    padding: 6px !important;
+    box-sizing: border-box !important;
+  }
+  /* INSCRIÇÃO ON-LINE — botão MUITO visível, full-width */
+  fieldset.fieldset a[data-testid="btn-inscricao-online"] {
+    display: block !important;
+    width: 100% !important;
+    margin: 12px 0 !important;
+    background: #c91313 !important;
+    color: #fff !important;
+    text-align: center !important;
+    padding: 14px 16px !important;
+    border-radius: 8px !important;
+    font-weight: bold !important;
+    font-size: 16px !important;
+    text-decoration: none !important;
+    box-shadow: 0 3px 8px rgba(201,19,19,0.35) !important;
+    letter-spacing: 0.5px !important;
+  }
+  fieldset.fieldset a[data-testid="btn-inscricao-online"]::before {
+    content: "📝 INSCRIÇÃO ON-LINE";
+    color: #fff;
+  }
+  fieldset.fieldset a[data-testid="btn-inscricao-online"] img {
+    display: none !important;
+  }
+  /* Tabela de cargos (data table, bgcolor=#fff) — scroll horizontal só nela */
+  fieldset.fieldset table[bgcolor],
+  fieldset.fieldset table[cellpadding="2"] {
     display: block !important;
     overflow-x: auto !important;
     max-width: 100% !important;
     -webkit-overflow-scrolling: touch !important;
     white-space: nowrap !important;
     font-size: 12px !important;
+    border: 1px solid #ddd;
+    margin: 8px 0 !important;
   }
-  fieldset.fieldset table table td,
-  fieldset.fieldset table table th {
+  fieldset.fieldset table[bgcolor] td,
+  fieldset.fieldset table[cellpadding="2"] td {
     padding: 6px 8px !important;
-    word-break: normal !important;
     white-space: nowrap !important;
   }
-  /* Coluna "Cargo" (primeira) — permite quebra para não esticar demais */
-  fieldset.fieldset table table tr td:first-child {
+  fieldset.fieldset table[bgcolor] tr td:first-child,
+  fieldset.fieldset table[cellpadding="2"] tr td:first-child {
     white-space: normal !important;
     min-width: 200px !important;
-    max-width: 240px !important;
+    max-width: 260px !important;
+  }
+  /* Texto longo do município (descrição) — quebra normal */
+  fieldset.fieldset span, fieldset.fieldset p, fieldset.fieldset div {
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+  /* Tabela de "Locais de provas" e "Documentos" — full width sem scroll */
+  fieldset.fieldset table[bgcolor="#999999"] {
+    display: block !important;
+    width: 100% !important;
+    overflow-x: visible !important;
+    white-space: normal !important;
+    margin: 8px 0 !important;
+  }
+  fieldset.fieldset table[bgcolor="#999999"] td {
+    white-space: normal !important;
+    padding: 8px !important;
   }
 
-  /* === Top: data e área superior — visibilidade melhorada === */
-  #SuperiorNomeEmpresa {
-    background: #003556 !important;
-    color: #fff !important;
-    font-weight: bold !important;
-    padding: 4px 12px !important;
-    font-size: 12px !important;
-    text-align: center !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
-  #SuperiorNomeEmpresa, #SuperiorNomeEmpresa * { color: #fff !important; }
+  /* === Top: barra laranja com data/IP do servidor — esconde em mobile === */
+  #SuperiorBG { display: none !important; }
+  #SuperiorNomeEmpresa { display: none !important; }
 
   /* === Tabelas legadas IDECAN === */
   body table[width="1024"], body table[width="1000"] {
