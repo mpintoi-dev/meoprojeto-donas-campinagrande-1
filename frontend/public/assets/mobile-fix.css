@@ -157,34 +157,23 @@
   }
 
   /* === Cards de concursos (Elementor / Home) === */
-  .e-con, .e-con-inner { padding-inline: 12px !important; }
-  /* Grids do Elementor: padrão 1 coluna no mobile (seguro para qualquer conteúdo) */
+  .e-con, .e-con-inner { padding-inline: 0 !important; }
+  /* Grids do Elementor: 1 coluna no mobile (cards um por linha, máx visibilidade) */
   .e-con.e-grid {
     --e-con-grid-template-columns: 1fr !important;
     grid-template-columns: 1fr !important;
-    gap: 14px !important;
-  }
-  /* Exceção: seção dos 4 cards de concursos → 2 colunas no mobile */
-  .elementor-element-5f819c0.e-grid,
-  .elementor-element-f266d75.e-grid {
-    --e-con-grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 12px 10px !important;
+    gap: 16px !important;
   }
   .elementor-element-5f819c0 > *,
-  .elementor-element-f266d75 > * { min-width: 0 !important; }
-  /* === Tipografia: títulos gigantes do Elementor não ultrapassam viewport === */
-  h1.elementor-heading-title { font-size: clamp(22px, 7vw, 34px) !important; line-height: 1.15 !important; }
-  h2.elementor-heading-title { font-size: clamp(20px, 6.2vw, 30px) !important; line-height: 1.18 !important; }
-  h3.elementor-heading-title { font-size: clamp(18px, 5.4vw, 24px) !important; line-height: 1.2 !important; }
+  .elementor-element-f266d75 > * { min-width: 0 !important; max-width: 100% !important; }
+  /* === Tipografia: títulos do Elementor proporcionais === */
+  h1.elementor-heading-title { font-size: clamp(22px, 6.5vw, 34px) !important; line-height: 1.15 !important; }
+  h2.elementor-heading-title { font-size: clamp(20px, 5.5vw, 30px) !important; line-height: 1.18 !important; }
+  h3.elementor-heading-title { font-size: clamp(18px, 5vw, 24px) !important; line-height: 1.2 !important; }
   .elementor-heading-title { word-break: break-word; }
-  /* Section títulos "Concursos Inscrições Abertas" e "Notícias" */
-  .elementor-widget-heading .elementor-heading-title {
-    padding-inline: 8px !important;
-  }
-  /* Margem lateral excessiva removida em headings com margin negativa */
+  /* Remove margem lateral excessiva em descrições */
   .elementor-element.elementor-element-0e1149c > .elementor-widget-container,
-  .elementor-element.elementor-element-5539f1c > .elementor-widget-container { margin-left: 12px !important; margin-right: 12px !important; }
+  .elementor-element.elementor-element-5539f1c > .elementor-widget-container { margin-left: 8px !important; margin-right: 8px !important; }
 
   /* === Modal de Login === */
   #lm-modal { max-width: 92vw !important; }
