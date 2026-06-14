@@ -87,10 +87,47 @@
     padding: 8px 12px !important;
   }
 
-  /* === Banner rotator (carrossel topo) === */
-  .wt-rotator { height: auto !important; min-height: 120px !important; }
-  .wt-rotator .screen { width: 100% !important; }
-  .wt-rotator img { max-width: 100% !important; height: auto !important; }
+  /* === Banner carousel decorativo (sem conteúdo útil em mobile) — esconde === */
+  #Foto { display: none !important; }
+  .wt-rotator, .c-panel { display: none !important; }
+
+  /* === Tabelas do edital (lista de cargos) — scroll horizontal preservando layout === */
+  fieldset.fieldset { padding: 8px 4px !important; margin: 8px 2px !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
+  fieldset.fieldset > table { width: 100% !important; }
+  /* Tabela aninhada (cargos) — permite scroll horizontal */
+  fieldset.fieldset table table {
+    display: block !important;
+    overflow-x: auto !important;
+    max-width: 100% !important;
+    -webkit-overflow-scrolling: touch !important;
+    white-space: nowrap !important;
+    font-size: 12px !important;
+  }
+  fieldset.fieldset table table td,
+  fieldset.fieldset table table th {
+    padding: 6px 8px !important;
+    word-break: normal !important;
+    white-space: nowrap !important;
+  }
+  /* Coluna "Cargo" (primeira) — permite quebra para não esticar demais */
+  fieldset.fieldset table table tr td:first-child {
+    white-space: normal !important;
+    min-width: 200px !important;
+    max-width: 240px !important;
+  }
+
+  /* === Top: data e área superior — visibilidade melhorada === */
+  #SuperiorNomeEmpresa {
+    background: #003556 !important;
+    color: #fff !important;
+    font-weight: bold !important;
+    padding: 4px 12px !important;
+    font-size: 12px !important;
+    text-align: center !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  #SuperiorNomeEmpresa, #SuperiorNomeEmpresa * { color: #fff !important; }
 
   /* === Tabelas legadas IDECAN === */
   body table[width="1024"], body table[width="1000"] {
