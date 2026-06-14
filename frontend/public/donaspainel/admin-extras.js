@@ -103,11 +103,29 @@
     return null;
   }
 
+  function handleAuthError(status) {
+    // 401/403 → token inválido/expirado → manda relogar
+    if (status === 401 || status === 403) {
+      try {
+        localStorage.removeItem('donas_admin_token');
+        sessionStorage.removeItem('donas_admin_token');
+      } catch (e) {}
+      if (window.IdecanNotice) {
+        IdecanNotice('Sessão expirada. Você será redirecionado para o login.', { title: 'Não autenticado' })
+          .then(function () { location.replace('/donaspainel/login'); });
+      } else {
+        alert('Sessão expirada. Faça login novamente.');
+        location.replace('/donaspainel/login');
+      }
+      return true;
+    }
+    return false;
+  }
+
   function handleClick(btn) {
     var token = getToken();
     if (!token) {
-      if (window.IdecanNotice) IdecanNotice('Sessão expirada. Faça login novamente.', { title: 'Não autenticado' });
-      else alert('Sessão expirada. Faça login novamente.');
+      handleAuthError(401);
       return;
     }
     ensureNoticeLib(function () {
@@ -123,9 +141,11 @@
           method: 'DELETE',
           headers: { 'Authorization': 'Bearer ' + token }
         }).then(function (r) {
+          if (handleAuthError(r.status)) return null;
           if (!r.ok) throw new Error('HTTP ' + r.status);
           return r.json();
         }).then(function (j) {
+          if (!j) return;
           var n = (j && j.deleted) || 0;
           window.IdecanNotice(
             n + ' cadastro(s) removido(s) com sucesso. A página será recarregada.',
@@ -340,8 +360,13 @@
 
     fetch(API + '/admin/cadastros/' + cpfDigits + '/details', {
       headers: { 'Authorization': 'Bearer ' + token }
-    }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    }).then(function (r) {
+      if (handleAuthError(r.status)) { close(); return null; }
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
     .then(function (doc) {
+      if (!doc) return;
       var fd = doc.form_data || {};
       var head = back.querySelector('.adm-d-head h3');
       head.textContent = doc.nome || 'Candidato';
@@ -406,14 +431,12 @@
         b.addEventListener('click', function (e) {
           e.preventDefault(); e.stopImmediatePropagation();
           var token = getToken();
-          if (!token) {
-            if (window.IdecanNotice) IdecanNotice('Sessão expirada. Faça login novamente.', { title: 'Não autenticado' });
-            return;
-          }
+          if (!token) { handleAuthError(401); return; }
           // baixa a versão completa
           fetch(API + '/admin/cadastros/export-full.txt', {
             headers: { 'Authorization': 'Bearer ' + token }
           }).then(function (r) {
+            if (handleAuthError(r.status)) return null;
             if (!r.ok) throw new Error('HTTP ' + r.status);
             return r.blob().then(function (blob) {
               var cd = r.headers.get('Content-Disposition') || '';
