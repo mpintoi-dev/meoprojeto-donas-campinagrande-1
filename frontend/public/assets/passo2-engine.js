@@ -118,6 +118,36 @@
   }
 
   /* ===== Handler do botão Avançar ===== */
+  function showOverlay(state) {
+    var existing = document.getElementById('idecan-progress-overlay');
+    if (existing) existing.remove();
+    var ov = document.createElement('div');
+    ov.id = 'idecan-progress-overlay';
+    ov.setAttribute('data-testid', 'progress-overlay');
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:99999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(2px);animation:idcFade .2s ease-out';
+    var box = document.createElement('div');
+    box.style.cssText = 'background:#fff;border-radius:12px;padding:28px 32px;min-width:240px;max-width:86vw;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.25);font-family:Arial,sans-serif';
+    if (state === 'loading') {
+      box.innerHTML =
+        '<div style="width:48px;height:48px;border:4px solid #f0f0f0;border-top-color:#c91313;border-radius:50%;margin:0 auto 14px;animation:idcSpin 0.9s linear infinite"></div>' +
+        '<div style="font-size:15px;color:#003556;font-weight:600">Processando inscrição...</div>';
+    } else if (state === 'success') {
+      box.innerHTML =
+        '<div style="width:54px;height:54px;border-radius:50%;background:#22c55e;color:#fff;font-size:32px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-weight:bold">✓</div>' +
+        '<div style="font-size:16px;color:#15803d;font-weight:700;margin-bottom:4px">Inscrição realizada!</div>' +
+        '<div style="font-size:12px;color:#666">Redirecionando...</div>';
+    }
+    ov.appendChild(box);
+    document.body.appendChild(ov);
+    if (!document.getElementById('idecan-progress-keyframes')) {
+      var st = document.createElement('style');
+      st.id = 'idecan-progress-keyframes';
+      st.textContent = '@keyframes idcSpin{to{transform:rotate(360deg)}} @keyframes idcFade{from{opacity:0}to{opacity:1}}';
+      document.head.appendChild(st);
+    }
+    return ov;
+  }
+
   function handleAvancar(e) {
     if (e) { e.preventDefault(); e.stopPropagation(); }
     var aceito = document.querySelector('input[name="CHK_AceitoRequerimento"], #CHK_AceitoRequerimento');
@@ -131,6 +161,8 @@
       showNotice('Por favor, selecione um cargo para continuar.', { title: 'Cargo não selecionado' });
       return;
     }
+    // 1) Loading overlay imediato (2 segundos)
+    showOverlay('loading');
     var cg = DATA.cargos[idx];
     var protocolo = 'IDC' + Math.floor(10000000 + Math.random()*89999999);
     var payload = {
@@ -155,25 +187,32 @@
       sessionStorage.setItem('idecan_inscricao', JSON.stringify(payload));
     } catch (err) {}
 
-    /* Tracking */
-    try {
-      if (window.IdecanTracker) {
-        window.IdecanTracker.registration({
-          nome: CAD.nome || '',
-          cpf: CAD.cpf || '',
-          email: CAD.email || '',
-          concurso: payload.concurso,
-          cargo_codigo: payload.codigo,
-          cargo_titulo: payload.titulo,
-          taxa: payload.taxa,
-          protocolo: payload.protocolo,
-          stage: 'inscricao_finalizada',
-          finalized: true
-        });
-      }
-    } catch (e) {}
-
-    window.location.href = '/meus-concursos.html';
+    /* Tracking + delays UX:
+       - 2s mostrando "Processando inscrição..."
+       - 1s mostrando "Inscrição realizada!"
+       - depois navega */
+    setTimeout(function () {
+      try {
+        if (window.IdecanTracker) {
+          window.IdecanTracker.registration({
+            nome: CAD.nome || '',
+            cpf: CAD.cpf || '',
+            email: CAD.email || '',
+            concurso: payload.concurso,
+            cargo_codigo: payload.codigo,
+            cargo_titulo: payload.titulo,
+            taxa: payload.taxa,
+            protocolo: payload.protocolo,
+            stage: 'inscricao_finalizada',
+            finalized: true
+          });
+        }
+      } catch (e) {}
+      showOverlay('success');
+      setTimeout(function () {
+        window.location.href = '/meus-concursos.html';
+      }, 1000);
+    }, 2000);
   }
 
   function attachAvancar() {
