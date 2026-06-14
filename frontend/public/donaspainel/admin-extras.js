@@ -448,68 +448,63 @@
     var modal = null;
     for (var i = 0; i < headings.length; i++) {
       if ((headings[i].textContent || '').trim().indexOf('Detalhes do candidato') === 0) {
-        modal = headings[i].closest('[role="dialog"], .modal, .Modal, [class*="modal"]') ||
+        modal = headings[i].closest('[role="dialog"], .dp-modal, .modal') ||
                 headings[i].parentElement && headings[i].parentElement.parentElement;
         break;
       }
     }
-    if (!modal || modal.dataset.idcEnhanced === '1') return;
-    modal.dataset.idcEnhanced = '1';
+    if (!modal) return;
+    // Só processa quando o corpo do modal estiver populado
+    var body = modal.querySelector('.dp-modal-body, .dp-detail-body');
+    if (!body) return;
+    var kvKeys = body.querySelectorAll('.kv-k');
+    if (kvKeys.length === 0) return;  // dados ainda não chegaram
 
-    /* Labels para ESCONDER (linha completa: label + valor) */
-    var hideLabels = [
-      'Cargo Codigo', 'Cargo Código',
-      'Finalized', 'Finalized At',
-      'Pix Status At',
-      'Pix Key Used At'
-    ];
-    /* Labels para RENOMEAR (old → new) */
-    var renameLabels = {
-      'Pix Key Used': 'Chave pix usada'
+    /* Labels para ESCONDER */
+    var hideLabels = {
+      'Cargo Codigo': 1, 'Cargo Código': 1,
+      'Finalized': 1, 'Finalized At': 1,
+      'Pix Status At': 1,
+      'Pix Key Used At': 1
     };
+    /* Labels para RENOMEAR */
+    var renameLabels = { 'Pix Key Used': 'Chave pix usada' };
 
-    var labels = modal.querySelectorAll('div, span, p, label');
     var foundUsed = false;
-    labels.forEach(function (el) {
+    var processedCount = 0;
+    kvKeys.forEach(function (el) {
       var txt = (el.textContent || '').trim();
-      // Renomeia
       if (renameLabels[txt]) {
         el.textContent = renameLabels[txt];
-        if (txt === 'Pix Key Used') foundUsed = true;
-        return;
-      }
-      // Esconde linha inteira
-      if (hideLabels.indexOf(txt) !== -1) {
-        // Sobe na árvore até encontrar a "row" (que contém label + valor irmão)
-        var row = el.parentElement;
-        // No layout em grid, a row é o parent do label que também contém o valor
+        foundUsed = true;
+        processedCount++;
+      } else if (hideLabels[txt]) {
+        var row = el.closest('.dp-kv');
         if (row) row.style.display = 'none';
+        processedCount++;
       }
     });
 
-    // Se NÃO encontrou "Pix Key Used", PIX ainda não foi gerado — injeta linha customizada
+    // Só marca como processado se realmente fez alguma alteração
+    if (processedCount === 0 && !foundUsed) return;
+    if (modal.dataset.idcEnhanced === '1') return;
+    modal.dataset.idcEnhanced = '1';
+
+    // Remove a antiga linha "aguardando gerar" no header (bug anterior)
+    var oldStrayRows = document.querySelectorAll('[data-testid="modal-chave-aguardando"]');
+    oldStrayRows.forEach(function (n) { n.remove(); });
+
+    // Se NÃO encontrou "Pix Key Used", PIX ainda não foi gerado (ou registro antigo)
     if (!foundUsed) {
-      var anchor = null;
-      var allLabels = modal.querySelectorAll('div, span, p');
-      allLabels.forEach(function (el) {
-        var txt = (el.textContent || '').trim();
-        if (txt === 'Taxa') {
-          var row = el.parentElement && el.parentElement.parentElement;
-          if (row) anchor = row;
-        }
-      });
-      var newRow = document.createElement('div');
-      newRow.setAttribute('data-testid', 'modal-chave-aguardando');
-      newRow.style.cssText = 'margin-top:14px;padding:8px 0;border-top:1px dashed #e5e7eb';
-      newRow.innerHTML =
-        '<div style="font-size:12px;color:#94a3b8;text-transform:none">Chave pix usada</div>' +
-        '<div style="font-size:14px;color:#9ca3af;font-style:italic">aguardando gerar</div>';
-      if (anchor && anchor.parentElement) {
-        anchor.parentElement.appendChild(newRow);
-      } else {
-        var body = modal.querySelector('.modal-body, [class*="body"]') || modal;
-        body.appendChild(newRow);
-      }
+      var lastSection = body.querySelector('.dp-section:last-of-type') || body;
+      var lastGrid = lastSection.querySelector('.dp-kv-grid:last-of-type') || lastSection;
+      var newKv = document.createElement('div');
+      newKv.className = 'dp-kv flat';
+      newKv.setAttribute('data-testid', 'modal-chave-aguardando');
+      newKv.innerHTML =
+        '<div class="kv-k">Chave pix usada</div>' +
+        '<div class="kv-v" style="color:#9ca3af;font-style:italic">aguardando gerar</div>';
+      lastGrid.appendChild(newKv);
     }
   }
 
