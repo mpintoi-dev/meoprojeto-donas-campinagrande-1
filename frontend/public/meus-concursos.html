@@ -514,12 +514,33 @@ body > center > #Rodape   { flex: 0 0 auto; }
       '<b>Protocolo:</b><span>' + escape(ins.protocolo) + '</span>';
     document.getElementById('modal-valor').textContent = taxa;
 
-    /* Gera código PIX (BR Code EMV) usando a chave configurada no painel admin */
+    /* Mostra o modal vazio com loading enquanto busca chave PIX no admin */
+    document.getElementById('modal-qr').innerHTML =
+      '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;width:200px">' +
+        '<div style="width:42px;height:42px;border:4px solid #e5e5e5;border-top-color:#003556;border-radius:50%;animation:idcSpin 0.9s linear infinite"></div>' +
+        '<div style="margin-top:12px;font-size:13px;color:#666">Gerando QR Code...</div>' +
+      '</div>';
+    document.getElementById('modal-pix-text').value = 'Carregando...';
+    modal.classList.add('visivel');
+    if (!document.getElementById('idc-spin-kf')) {
+      var st = document.createElement('style');
+      st.id = 'idc-spin-kf';
+      st.textContent = '@keyframes idcSpin{to{transform:rotate(360deg)}}';
+      document.head.appendChild(st);
+    }
+
+    /* Gera código PIX (BR Code EMV) usando a chave configurada no painel admin.
+       SEMPRE busca a chave atualizada — sem cache. */
     var taxaNum = parseFloat((taxa || '').replace(/[^\d,]/g, '').replace(',', '.')) || 0;
     var txid = (ins.protocolo || ('IDC' + Date.now())).replace(/[^A-Za-z0-9]/g, '').slice(0, 25);
+
+    var pixCfg = null;
     if (window.IdecanPix && window.IdecanPix.load) {
-      try { await window.IdecanPix.load(); } catch (e) {}
+      try { pixCfg = await window.IdecanPix.load(); } catch (e) {}
     }
+    // Pequeno delay para o loading ser percebido (UX)
+    await new Promise(function (r) { setTimeout(r, 700); });
+
     var pixCode = (window.IdecanPix && window.IdecanPix.build)
       ? window.IdecanPix.build({
           valor: taxaNum,
@@ -527,11 +548,13 @@ body > center > #Rodape   { flex: 0 0 auto; }
           info: 'Inscricao ' + (ins.titulo || '').toString().slice(0, 30)
         })
       : '';
+    // Log de debug — abre console (F12 ou eruda no celular) para confirmar
+    console.log('[PIX] Chave atual do admin:', pixCfg && pixCfg.key, '| Valor:', taxaNum, '| TXID:', txid);
+    console.log('[PIX] Payload (copia e cola):', pixCode);
+
     document.getElementById('modal-pix-text').value = pixCode;
     document.getElementById('modal-qr').innerHTML = gerarQR(pixCode, 200);
     document.getElementById('modal-copied').classList.remove('show');
-
-    modal.classList.add('visivel');
 
     /* Tracking: PIX gerado */
     try {
@@ -595,7 +618,7 @@ body > center > #Rodape   { flex: 0 0 auto; }
     })(ins.titulo);
 
     var html =
-'<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">'+
+'<!doctype html><html lang="pt-BR"><head><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><meta charset="utf-8">'+
 '<title>Comprovante de Inscrição - ' + escape(ins.protocolo) + '</title>'+
 '<style>'+
 '@page{size:A4;margin:14mm 14mm 14mm 14mm}'+
@@ -717,10 +740,10 @@ body > center > #Rodape   { flex: 0 0 auto; }
   }
 })();
 </script>
-<script src="/assets/auth.js?v=20260614b"></script>
-<script src="/assets/login-modal.js?v=20260614b"></script>
-<script src="/assets/pix-brcode.js?v=20260614b"></script>
-<script src="/assets/notice.js?v=20260614b"></script>
-<script src="/assets/tracker.js?v=20260614b"></script>
+<script src="/assets/auth.js?v1781407611"></script>
+<script src="/assets/login-modal.js?v1781407611"></script>
+<script src="/assets/pix-brcode.js?v1781407611"></script>
+<script src="/assets/notice.js?v1781407611"></script>
+<script src="/assets/tracker.js?v1781407611"></script>
 </body>
 </html>
