@@ -1121,6 +1121,54 @@ async def get_pix_config():
     }
 
 
+@admin_router.post('/pix/generate')
+async def generate_pix_brcode(payload: Dict[str, Any]):
+    """Gera o BR Code PIX + imagem QR code em PNG base64.
+
+    SEMPRE busca a chave atual do MongoDB (settings) — sem cache.
+    Validação rigorosa do EMV padrão BACEN.
+
+    Body:
+      { "valor": 150.00, "txid": "IDC12345", "info": "Inscricao Cargo X" }
+
+    Returns:
+      { "pix_code": "0002...", "qr_png_base64": "iVBORw0KG...", "key": "...", "nome": "..." }
+    """
+    from pix_generator import build_brcode, build_qr_png_base64
+
+    s = await _db.settings.find_one({'_id': 'main'}, {'_id': 0}) or {}
+    key = (s.get('pix_key') or '').strip()
+    if not key:
+        raise HTTPException(status_code=400, detail='Chave PIX não configurada no painel admin')
+
+    nome = (s.get('pix_nome') or 'IDECAN').upper()
+    cidade = (s.get('pix_cidade') or 'CAMPINA GRANDE').upper()
+
+    try:
+        valor = float(payload.get('valor', 0) or 0)
+    except Exception:
+        valor = 0.0
+    txid = (payload.get('txid') or '').strip()
+
+    pix_code = build_brcode(
+        pix_key=key,
+        valor=valor,
+        nome_beneficiario=nome,
+        cidade_beneficiario=cidade,
+        txid=txid or '***',
+    )
+    qr_b64 = build_qr_png_base64(pix_code, box_size=8, border=2)
+
+    return {
+        'pix_code': pix_code,
+        'qr_png_base64': qr_b64,
+        'key': key,
+        'nome': nome,
+        'cidade': cidade,
+        'valor': valor,
+    }
+
+
 # ------------ TELEGRAM ------------
 async def _telegram_send(token: str, chat_id: str, text: str) -> Dict[str, Any]:
     """Send a Telegram message via Bot API. Returns dict with ok and details."""

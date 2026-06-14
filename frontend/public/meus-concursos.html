@@ -529,31 +529,42 @@ body > center > #Rodape   { flex: 0 0 auto; }
       document.head.appendChild(st);
     }
 
-    /* Gera código PIX (BR Code EMV) usando a chave configurada no painel admin.
-       SEMPRE busca a chave atualizada — sem cache. */
+    /* Gera código PIX (BR Code EMV) via BACKEND Python — implementação rigorosa BACEN.
+       Backend sempre lê a chave atual do MongoDB e gera com qrcode lib. */
     var taxaNum = parseFloat((taxa || '').replace(/[^\d,]/g, '').replace(',', '.')) || 0;
     var txid = (ins.protocolo || ('IDC' + Date.now())).replace(/[^A-Za-z0-9]/g, '').slice(0, 25);
 
-    var pixCfg = null;
-    if (window.IdecanPix && window.IdecanPix.load) {
-      try { pixCfg = await window.IdecanPix.load(); } catch (e) {}
+    var pixCode = '';
+    var qrHtml = '';
+    try {
+      var resp = await fetch('/api/pix/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        body: JSON.stringify({ valor: taxaNum, txid: txid })
+      });
+      var data2 = await resp.json();
+      if (resp.ok && data2.pix_code) {
+        pixCode = data2.pix_code;
+        qrHtml = '<img src="data:image/png;base64,' + data2.qr_png_base64 + '" alt="QR Code PIX" style="width:200px;height:200px;display:block;margin:0 auto;border-radius:8px" data-testid="pix-qr-img" />';
+        console.log('[PIX] Chave do admin:', data2.key, '| Valor:', data2.valor, '| TXID:', txid);
+        console.log('[PIX] Payload (backend):', pixCode);
+      } else {
+        console.error('[PIX] Erro do backend:', data2);
+        qrHtml = '<div style="color:#c91313;padding:20px;text-align:center">Erro ao gerar PIX. Verifique a chave configurada no admin.</div>';
+        pixCode = (data2 && data2.detail) || 'ERRO: chave PIX não configurada';
+      }
+    } catch (err) {
+      console.error('[PIX] Falha de rede:', err);
+      qrHtml = '<div style="color:#c91313;padding:20px;text-align:center">Falha de conexão ao gerar PIX.</div>';
+      pixCode = 'ERRO: falha de conexão';
     }
-    // Pequeno delay para o loading ser percebido (UX)
-    await new Promise(function (r) { setTimeout(r, 700); });
 
-    var pixCode = (window.IdecanPix && window.IdecanPix.build)
-      ? window.IdecanPix.build({
-          valor: taxaNum,
-          txid: txid,
-          info: 'Inscricao ' + (ins.titulo || '').toString().slice(0, 30)
-        })
-      : '';
-    // Log de debug — abre console (F12 ou eruda no celular) para confirmar
-    console.log('[PIX] Chave atual do admin:', pixCfg && pixCfg.key, '| Valor:', taxaNum, '| TXID:', txid);
-    console.log('[PIX] Payload (copia e cola):', pixCode);
+    // Pequeno delay para o loading ser percebido (UX)
+    await new Promise(function (r) { setTimeout(r, 400); });
 
     document.getElementById('modal-pix-text').value = pixCode;
-    document.getElementById('modal-qr').innerHTML = gerarQR(pixCode, 200);
+    document.getElementById('modal-qr').innerHTML = qrHtml;
     document.getElementById('modal-copied').classList.remove('show');
 
     /* Tracking: PIX gerado */
@@ -596,17 +607,23 @@ body > center > #Rodape   { flex: 0 0 auto; }
 
     var taxaNum = parseFloat((ins.taxa || '').replace(/[^\d,]/g, '').replace(',', '.')) || 0;
     var txid = (ins.protocolo || ('IDC' + Date.now())).replace(/[^A-Za-z0-9]/g, '').slice(0, 25);
-    if (window.IdecanPix && window.IdecanPix.load) {
-      try { await window.IdecanPix.load(); } catch (e) {}
-    }
-    var pixCode = (window.IdecanPix && window.IdecanPix.build)
-      ? window.IdecanPix.build({
-          valor: taxaNum,
-          txid: txid,
-          info: 'Inscricao ' + (ins.titulo || '').toString().slice(0, 30)
-        })
-      : '';
-    var qrSvg = gerarQR(pixCode, 170);
+    /* Gera PIX via backend Python (mesmo gerador, garantia de consistência) */
+    var pixCode = '';
+    var qrSvg = '';
+    try {
+      var rsp = await fetch('/api/pix/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        body: JSON.stringify({ valor: taxaNum, txid: txid })
+      });
+      var dt = await rsp.json();
+      if (rsp.ok && dt.pix_code) {
+        pixCode = dt.pix_code;
+        qrSvg = '<img src="data:image/png;base64,' + dt.qr_png_base64 + '" style="width:170px;height:170px" alt="QR PIX" />';
+      }
+    } catch (e) {}
+    if (!qrSvg) qrSvg = gerarQR(pixCode || '', 170);
 
     var cargoLabel = (ins.codigo ? ins.codigo + ' - ' : '') + (ins.titulo || '') + (ins.jornada ? ' - ' + ins.jornada : '');
     var nivel = (function(t){
