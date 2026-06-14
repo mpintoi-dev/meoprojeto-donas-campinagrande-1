@@ -10,17 +10,16 @@
    ============================================================ */
 (function () {
   var CONFIG = { key: '', nome: '', cidade: '' };
-  var loaded = false;
 
+  /* Busca SEMPRE a chave atual do admin (sem cache).
+     Garante que mudanças no painel /donaspainel/configuracoes refletem imediatamente. */
   function load() {
-    if (loaded) return Promise.resolve(CONFIG);
-    return fetch('/api/pix-config').then(function (r) { return r.json(); }).then(function (d) {
+    return fetch('/api/pix-config', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
       CONFIG = {
         key: (d.key || '').trim(),
         nome: ((d.nome || 'IDECAN').toUpperCase()).slice(0, 25),
         cidade: ((d.cidade || 'CAMPINA GRANDE').toUpperCase()).slice(0, 15),
       };
-      loaded = true;
       return CONFIG;
     }).catch(function () { return CONFIG; });
   }
@@ -77,7 +76,10 @@
 
     var payload =
       emv('00', '01') +                  // Payload format indicator
-      emv('01', '12') +                  // POI: 12 = mais de uma transação
+      // Campo 01 (POI) é OPCIONAL em QR estático com valor fixo.
+      // Quando presente DEVE ser "11" (estático). "12" é só para QR dinâmico
+      // com URL no campo 25 — caso contrário, bancos rejeitam.
+      emv('01', '11') +                  // POI: 11 = estático reutilizável
       p26 +
       emv('52', '0000') +                // MCC
       emv('53', '986') +                 // moeda BRL

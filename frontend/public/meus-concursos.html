@@ -562,7 +562,7 @@ body > center > #Rodape   { flex: 0 0 auto; }
   });
 
   /* ====================== Comprovante de Inscrição (impressão) ====================== */
-  function abrirComprovante(idx){
+  async function abrirComprovante(idx){
     var ins = inscricoes[idx];
     if(!ins) return;
 
@@ -573,6 +573,9 @@ body > center > #Rodape   { flex: 0 0 auto; }
 
     var taxaNum = parseFloat((ins.taxa || '').replace(/[^\d,]/g, '').replace(',', '.')) || 0;
     var txid = (ins.protocolo || ('IDC' + Date.now())).replace(/[^A-Za-z0-9]/g, '').slice(0, 25);
+    if (window.IdecanPix && window.IdecanPix.load) {
+      try { await window.IdecanPix.load(); } catch (e) {}
+    }
     var pixCode = (window.IdecanPix && window.IdecanPix.build)
       ? window.IdecanPix.build({
           valor: taxaNum,
