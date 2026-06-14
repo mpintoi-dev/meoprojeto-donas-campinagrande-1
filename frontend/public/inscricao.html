@@ -163,7 +163,7 @@ footer{text-align:center;padding:20px 16px 28px;font-size:13px;color:#475569}
         </div>
         <div class="field">
           <label for="nascimento">Nascimento</label>
-          <input type="date" id="nascimento" name="nascimento" required data-testid="input-nascimento">
+          <input type="text" id="nascimento" name="nascimento" required data-testid="input-nascimento" placeholder="DD/MM/AAAA" inputmode="numeric" maxlength="10" autocomplete="bday">
         </div>
       </div>
       <div class="row">
@@ -308,7 +308,7 @@ footer{text-align:center;padding:20px 16px 28px;font-size:13px;color:#475569}
         </div>
         <div class="field">
           <label for="rg-data">Data de Expedição (RG)</label>
-          <input type="date" id="rg-data" name="rg-data" data-testid="input-rg-data">
+          <input type="text" id="rg-data" name="rg-data" data-testid="input-rg-data" placeholder="DD/MM/AAAA" inputmode="numeric" maxlength="10">
         </div>
       </div>
       <div class="row">
@@ -523,20 +523,36 @@ cpfEl.addEventListener('blur', function(){
 
 /* ============ Dates: prevent invalid / future / too-old ============ */
 function clampDate(el, opts){
-  el.setAttribute('max', new Date().toISOString().slice(0,10)); // hoje
-  if(opts && opts.minYear){
-    var min = (new Date().getFullYear() - opts.minYear);
-    el.setAttribute('min', min + '-01-01');
-  }
+  // Máscara DD/MM/AAAA — funciona em mobile (sem date picker nativo) e desktop
+  el.addEventListener('input', function(e){
+    var v = this.value.replace(/\D/g,'').slice(0,8);
+    var out = v;
+    if (v.length >= 5) out = v.slice(0,2) + '/' + v.slice(2,4) + '/' + v.slice(4);
+    else if (v.length >= 3) out = v.slice(0,2) + '/' + v.slice(2);
+    this.value = out;
+  });
   el.addEventListener('blur', function(){
     if(!this.value){ setError(this,''); return; }
-    var d = new Date(this.value);
-    if(isNaN(d.getTime())){ setError(this,'Data inválida.'); return; }
-    var max = this.getAttribute('max'), min = this.getAttribute('min');
-    if(max && this.value > max){ setError(this,'Data não pode ser no futuro.'); return; }
-    if(min && this.value < min){ setError(this,'Data muito antiga.'); return; }
+    var m = this.value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if(!m){ setError(this,'Use o formato DD/MM/AAAA.'); return; }
+    var dd = parseInt(m[1],10), mm = parseInt(m[2],10), yyyy = parseInt(m[3],10);
+    var d = new Date(yyyy, mm-1, dd);
+    if(isNaN(d.getTime()) || d.getDate() !== dd || d.getMonth() !== mm-1 || d.getFullYear() !== yyyy){
+      setError(this,'Data inválida.'); return;
+    }
+    var today = new Date(); today.setHours(0,0,0,0);
+    if(d > today){ setError(this,'Data não pode ser no futuro.'); return; }
+    if(opts && opts.minYear){
+      var minDate = new Date(today.getFullYear() - opts.minYear, 0, 1);
+      if(d < minDate){ setError(this,'Data muito antiga.'); return; }
+    }
     setError(this,'');
   });
+}
+/* Converte DD/MM/AAAA -> AAAA-MM-DD (formato esperado pelo backend) */
+function dateToISO(brDate){
+  var m = (brDate || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  return m ? (m[3] + '-' + m[2] + '-' + m[1]) : brDate;
 }
 clampDate(document.getElementById('nascimento'), {minYear:120});
 clampDate(document.getElementById('rg-data'),    {minYear:80});
@@ -603,6 +619,7 @@ document.getElementById('cadastro-form').addEventListener('submit', function(e){
     nomeSocial:     document.getElementById('nome-social').value.trim(),
     sexo:           (document.querySelector('input[name="sexo"]:checked')||{}).value || '',
     nascimento:     document.getElementById('nascimento').value,
+    nascimentoIso:  dateToISO(document.getElementById('nascimento').value),
     nacionalidade:  document.getElementById('nacionalidade').value,
     escolaridade:   document.getElementById('escolaridade').value,
     estadoCivil:    document.getElementById('estado-civil').value,
@@ -622,6 +639,7 @@ document.getElementById('cadastro-form').addEventListener('submit', function(e){
     pcd:            (document.querySelector('input[name="pcd"]:checked')||{}).value || '',
     rg:             document.getElementById('rg').value,
     rgData:         document.getElementById('rg-data').value,
+    rgDataIso:      dateToISO(document.getElementById('rg-data').value),
     rgOrgao:        document.getElementById('rg-orgao').value,
     rgUF:           document.getElementById('rg-uf').value,
     cpf:            cpfEl.value
