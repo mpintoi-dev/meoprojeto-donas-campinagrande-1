@@ -59,6 +59,21 @@ Importar HTML estático IDECAN, remover links externos e construir portal funcio
 python3 /app/scripts/seed_admin_data.py
 ```
 
+## Sessão 14/06 — Auditoria Mobile Completa (NOVO)
+- ✅ Audit em 11 páginas com viewport 390x844 (iPhone-class).
+- ✅ Identificadas 4 páginas com overflow horizontal de 634px: quadro-geral, guarda-municipal, agente-transito, procuradoria.
+- ✅ Identificado bloqueio do CSP `style-src 'unsafe-inline'` que impedia `<link>` externo de carregar.
+- ✅ Solução: CSS responsivo injetado **inline** via `tracker.js` (compatível com CSP), aplicado em TODAS as páginas. Arquivo `/app/frontend/public/assets/mobile-fix.css` também criado como referência.
+- ✅ Correções aplicadas (@media max-width: 760px):
+  - Estrutura legada IDECAN (#Superior, #SuperiorBG, #Foto, #Conteudo, #Rodape, .wt-rotator) → width:100%, overflow-x:hidden
+  - Nav links no topo (#SuperiorLinks) → centralizados, com wrap, tap-target 28px+
+  - Tabelas legadas (table[width="1024"]) → stack vertical
+  - Inputs e selects → 100% largura, font-size 14px (evita zoom iOS)
+  - Botão WhatsApp flutuante (.chat-button) → fixed bottom-right, 48px
+  - VLibras → scale(.85)
+  - Modal de login → max-width 92vw
+- ✅ Resultado: 11/11 páginas sem overflow horizontal, layout limpo em mobile, desktop intacto.
+
 ## Sessão 13/06 — Notificações Telegram (NOVO)
 - ✅ Backend: `/api/admin/settings` armazena `telegram_bot_token`, `telegram_chat_id`, `telegram_enabled`.
 - ✅ Helpers em `admin_routes.py`: `_telegram_send`, `_telegram_edit`, `notify_or_update_telegram`, `_build_telegram_message`.
